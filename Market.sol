@@ -2010,7 +2010,7 @@ abstract contract NFTMarketReserveAuction is
         address nftContract,
         uint256 tokenId,
         uint256 reservePrice,
-        uint256 stateDate,
+        uint256 startDate,
         uint256 endDate,
         address paymentMode
     ) public onlyValidAuctionConfig(reservePrice) nonReentrant {
@@ -2018,9 +2018,9 @@ abstract contract NFTMarketReserveAuction is
         // If an auction is already in progress then the NFT would be in escrow and the modifier would have failed
         uint256 extraTimeForExecution = 10 minutes;
         require(
-            stateDate + extraTimeForExecution > block.timestamp &&
-                endDate > stateDate + EXTENSION_DURATION,
-            "NFTMarketReserveAuction: endDate must be > stateDate + auction duration "
+            startDate + extraTimeForExecution > block.timestamp &&
+                endDate > startDate + EXTENSION_DURATION,
+            "NFTMarketReserveAuction: endDate must be > startDate + auction duration"
         );
         uint256 auctionId = _getNextAndIncrementAuctionId();
         nftContractToTokenIdToAuctionId[nftContract][tokenId] = auctionId;
@@ -2028,7 +2028,7 @@ abstract contract NFTMarketReserveAuction is
             nftContract,
             tokenId,
             msg.sender,
-            stateDate,
+            startDate,
             endDate, // endTime is only known once the reserve price is met
             address(0), // bidder is only known once a bid has been placed
             reservePrice,

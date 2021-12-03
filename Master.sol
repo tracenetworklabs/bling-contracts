@@ -64,7 +64,10 @@ contract Bling_Master {
      * @dev Modifier to protect an initializer function from being invoked twice.
      */
     modifier onlyWhitelistedUsers() {
-        require(whitelisted[msg.sender], "NFT721Mint: Address Not Authorized");
+        require(
+            whitelisted[msg.sender],
+            "Bling_Master: Address Not Authorized"
+        );
         _;
     }
 
@@ -72,14 +75,17 @@ contract Bling_Master {
      * @dev Modifier to protect an initializer function from being invoked twice.
      */
     modifier onlyOwner() {
-        require((admin == msg.sender), "NFT721Mint: Address Not Authorized");
+        require(
+            IAdminRole(treasury).isAdmin(msg.sender),
+            "Bling_Master: Address Not Authorized"
+        );
         _;
     }
 
     /**
      * @notice Allows foundation admin to whitelist users
      */
-    function addWhitelist(address[] memory brands, bool[] memory status)
+    function updateWhitelist(address[] memory brands, bool[] memory status)
         public
         onlyOwner
     {
