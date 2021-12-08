@@ -2391,7 +2391,7 @@ pragma abicoder v2; // solhint-disable-line
  * @title A market for NFTs on Foundation.
  * @dev This top level file holds no data directly to ease future upgrades.
  */
-contract FNDNFTMarket_Flat is
+contract BlingMarket is
     FoundationTreasuryNode,
     FoundationAdminRole,
     FoundationOperatorRole,
