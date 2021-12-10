@@ -2229,7 +2229,7 @@ abstract contract NFTMarketReserveAuction is
      */
     function getMinBidAmount(uint256 auctionId) public view returns (uint256) {
         ReserveAuction storage auction = auctionIdToAuction[auctionId];
-        if (auction.endTime >= block.timestamp) {
+        if (auction.endTime < block.timestamp) {
             return auction.amount;
         }
         return _getMinBidAmountForReserveAuction(auction.amount);

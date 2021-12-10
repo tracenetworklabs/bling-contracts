@@ -3355,7 +3355,7 @@ pragma solidity ^0.7.0;
  * @title Foundation NFTs implemented using the ERC-721 standard.
  * @dev This top level file holds no data directly to ease future upgrades.
  */
-contract Bling_Collection is
+contract BlingCollection is
     FoundationTreasuryNode,
     FoundationOperatorRole,
     AccountMigration,
