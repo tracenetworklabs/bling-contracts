@@ -107,7 +107,7 @@ contract Bling_Master {
             "Bling_Master: COLLECTION_EXISTS"
         ); // single check is sufficient
 
-        bytes memory bytecode = type(Bling_Collection).creationCode;
+        bytes memory bytecode = type(BlingCollection).creationCode;
         bytes32 salt = keccak256(abi.encodePacked(msg.sender, _colCode));
 
         assembly {
@@ -116,14 +116,14 @@ contract Bling_Master {
 
         getCollection[msg.sender][_colCode] = collection;
         getCode[collection] = _colCode;
-        Bling_Collection(collection).initialize(
+        BlingCollection(collection).initialize(
             treasury,
             _colName,
             _colName,
             _colQuantity,
             msg.sender
         );
-        Bling_Collection(collection).adminUpdateConfig(
+        BlingCollection(collection).adminUpdateConfig(
             nftmarket,
             "https://ipfs.io/ipfs/"
         );
@@ -162,7 +162,7 @@ contract Bling_Master {
         );
         // Add require condition to check
         require(
-            (Bling_Collection(_colContract).getNextTokenId() - 1) == 0,
+            (BlingCollection(_colContract).getNextTokenId() - 1) == 0,
             "Bling_Master: UPDATE_NOT_ALLOWED"
         ); // single check is sufficient
 
@@ -170,7 +170,7 @@ contract Bling_Master {
         collection.description = _colDescription;
         collection.properties = _colProperties;
         collection.quantity = _totalSupply;
-        Bling_Collection(_colContract).masterUpdateSupply(_totalSupply);
+        BlingCollection(_colContract).masterUpdateSupply(_totalSupply);
 
         emit CollectionUpdated(
             msg.sender,
@@ -212,6 +212,6 @@ contract Bling_Master {
             getCollection[msg.sender][_colCode] == _colContract,
             "Bling_Master: COLLECTION_NOT_EXISTS"
         );
-        Bling_Collection(_colContract).adminUpdateConfig(_nftMarket, baseURI);
+        BlingCollection(_colContract).adminUpdateConfig(_nftMarket, baseURI);
     }
 }
