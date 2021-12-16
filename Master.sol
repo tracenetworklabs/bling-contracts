@@ -5,7 +5,7 @@ import "./Collection.sol";
 pragma solidity 0.7.6;
 pragma experimental ABIEncoderV2;
 
-contract Bling_Master {
+contract BlingMaster {
     // Include safemanth library
     using SafeMathUpgradeable for uint256;
 
@@ -37,6 +37,7 @@ contract Bling_Master {
     // get collection
     mapping(address => mapping(string => address)) public getCollection;
     mapping(address => string) public getCode;
+    mapping(address => string) public brandName;
 
     mapping(address => bool) public whitelisted;
 
@@ -49,6 +50,8 @@ contract Bling_Master {
         address myContract,
         uint256 quantity
     );
+
+    event Whitelist(address[] brand, string[] name, bool[] status);
 
     event CollectionUpdated(
         address creator,
@@ -85,13 +88,16 @@ contract Bling_Master {
     /**
      * @notice Allows foundation admin to whitelist users
      */
-    function updateWhitelist(address[] memory brands, bool[] memory status)
-        public
-        onlyOwner
-    {
+    function updateWhitelist(
+        address[] memory brands,
+        string[] memory name,
+        bool[] memory status
+    ) public onlyOwner {
         for (uint256 i; i < brands.length; i++) {
             whitelisted[brands[i]] = status[i];
+            brandName[brands[i]] = name[i];
         }
+        emit Whitelist(brands, name, status);
     }
 
     function createCollection(

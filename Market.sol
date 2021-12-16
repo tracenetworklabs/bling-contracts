@@ -2014,7 +2014,7 @@ abstract contract NFTMarketReserveAuction is
         uint256 endDate,
         address paymentMode
     ) public onlyValidAuctionConfig(reservePrice) nonReentrant {
-        require(tokens[paymentMode], "NFTMarketReserveAuction: Token not supported");
+        require(tokens[paymentMode], "Token not supported");
         // If an auction is already in progress then the NFT would be in escrow and the modifier would have failed
         uint256 extraTimeForExecution = 10 minutes;
         require(
@@ -2256,7 +2256,7 @@ abstract contract NFTMarketReserveAuction is
     /**
      * @notice Allows Foundation to add token address.
      */
-    function adminAddToken(address[] memory tokenAddress, bool[] memory status)
+    function adminUpdateToken(address[] memory tokenAddress, bool[] memory status)
         public
         onlyFoundationAdmin
     {
