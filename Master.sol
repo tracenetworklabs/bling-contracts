@@ -124,8 +124,8 @@ contract BlingMaster {
         getCode[collection] = _colCode;
         BlingCollection(collection).initialize(
             treasury,
-            _colName,
-            _colName,
+            _colCode,
+            _colCode,
             _colQuantity,
             msg.sender
         );
