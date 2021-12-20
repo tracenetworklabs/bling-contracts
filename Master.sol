@@ -24,6 +24,8 @@ contract BlingMaster {
         string[] properties;
         // the contract address
         address myContract;
+        // the beneficiary address
+        address payable beneficiary;
     }
 
     constructor(address payable _treasury, address payable _nftMarket) {
@@ -48,7 +50,8 @@ contract BlingMaster {
         string ColDescription,
         string[] ColProperties,
         address myContract,
-        uint256 quantity
+        uint256 quantity,
+        address beneficiary
     );
 
     event Whitelist(address[] brand, string[] name, bool[] status);
@@ -60,7 +63,8 @@ contract BlingMaster {
         string ColDescription,
         string[] ColProperties,
         address myContract,
-        uint256 quantity
+        uint256 quantity,
+        address beneficiary
     );
 
     /**
@@ -69,7 +73,7 @@ contract BlingMaster {
     modifier onlyWhitelistedUsers() {
         require(
             whitelisted[msg.sender],
-            "Bling_Master: Address Not Authorized"
+            "BlingMaster: Address Not Authorized"
         );
         _;
     }
@@ -80,7 +84,7 @@ contract BlingMaster {
     modifier onlyOwner() {
         require(
             IAdminRole(treasury).isAdmin(msg.sender),
-            "Bling_Master: Address Not Authorized"
+            "BlingMaster: Address Not Authorized"
         );
         _;
     }
@@ -111,7 +115,7 @@ contract BlingMaster {
         // Add require condition to check
         require(
             getCollection[msg.sender][_colCode] == address(0),
-            "Bling_Master: COLLECTION_EXISTS"
+            "BlingMaster: COLLECTION_EXISTS"
         ); // single check is sufficient
 
         bytes memory bytecode = type(BlingCollection).creationCode;
@@ -128,8 +132,7 @@ contract BlingMaster {
             _colCode,
             _colCode,
             _colQuantity,
-            msg.sender,
-            _beneficiary
+            msg.sender
         );
         BlingCollection(collection).adminUpdateConfig(
             nftmarket,
@@ -140,7 +143,8 @@ contract BlingMaster {
             quantity: _colQuantity,
             description: _colDescription,
             properties: _colProperties,
-            myContract: collection
+            myContract: collection,
+            beneficiary: _beneficiary
         });
 
         emit CollectionCreated(
@@ -150,7 +154,8 @@ contract BlingMaster {
             _colDescription,
             _colProperties,
             collection,
-            _colQuantity
+            _colQuantity,
+            _beneficiary
         );
     }
 
@@ -167,20 +172,20 @@ contract BlingMaster {
 
         require(
             getCollection[msg.sender][_colCode] == _colContract,
-            "Bling_Master: COLLECTION_NOT_EXISTS"
+            "BlingMaster: COLLECTION_NOT_EXISTS"
         );
         // Add require condition to check
         require(
             (BlingCollection(_colContract).getNextTokenId() - 1) == 0,
-            "Bling_Master: UPDATE_NOT_ALLOWED"
+            "BlingMaster: UPDATE_NOT_ALLOWED"
         ); // single check is sufficient
 
         collection.name = _colName;
         collection.description = _colDescription;
         collection.properties = _colProperties;
         collection.quantity = _totalSupply;
+        collection.beneficiary = _beneficiary;
         BlingCollection(_colContract).adminUpdateSupply(_totalSupply);
-        BlingCollection(_colContract).adminUpdateBeneficiary(_beneficiary);
 
         emit CollectionUpdated(
             msg.sender,
@@ -189,7 +194,8 @@ contract BlingMaster {
             _colDescription,
             _colProperties,
             _colContract,
-            _totalSupply
+            _totalSupply,
+            _beneficiary
         );
     }
 
@@ -220,7 +226,7 @@ contract BlingMaster {
     ) public onlyOwner {
         require(
             getCollection[msg.sender][_colCode] == _colContract,
-            "Bling_Master: COLLECTION_NOT_EXISTS"
+            "BlingMaster: COLLECTION_NOT_EXISTS"
         );
         BlingCollection(_colContract).adminUpdateConfig(_nftMarket, baseURI);
     }

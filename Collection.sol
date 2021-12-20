@@ -2847,17 +2847,10 @@ abstract contract NFT721Creator is
         address originalPaymentAddress,
         address newPaymentAddress
     );
-    event BeneficiaryUpdated(
-        address benefiaryAddress
-    );
-
     /*
      * bytes4(keccak256('tokenCreator(uint256)')) == 0x40c1a064
      */
     bytes4 private constant _INTERFACE_TOKEN_CREATOR = 0x40c1a064;
-
-    // Beneficiary 
-    address payable private beneficiary;
 
     /*
      * bytes4(keccak256('getTokenCreatorPaymentAddress(uint256)')) == 0xec5f752e;
@@ -2904,19 +2897,19 @@ abstract contract NFT721Creator is
     }
 
     /**
-     * @notice Returns the payment address for a given tokenId.
-     * @dev If an alternate address was not defined, the creator is returned instead.
-     */
-    function getTokenCreatorPaymentAddress()
-        public
-        view
-        returns (address payable tokenCreatorPaymentAddress)
-    {
-        tokenCreatorPaymentAddress = beneficiary;
-        // if (tokenCreatorPaymentAddress == address(0)) {
-        //     tokenCreatorPaymentAddress = tokenIdToCreator[tokenId];
-        // }
+   * @notice Returns the payment address for a given tokenId.
+   * @dev If an alternate address was not defined, the creator is returned instead.
+   */
+  function getTokenCreatorPaymentAddress(uint256 tokenId)
+    public
+    view
+    returns (address payable tokenCreatorPaymentAddress)
+  {
+    tokenCreatorPaymentAddress = tokenIdToCreatorPaymentAddress[tokenId];
+    if (tokenCreatorPaymentAddress == address(0)) {
+      tokenCreatorPaymentAddress = tokenIdToCreator[tokenId];
     }
+  }
 
     function _updateTokenCreator(uint256 tokenId, address payable creator)
         internal
@@ -2924,13 +2917,6 @@ abstract contract NFT721Creator is
         emit TokenCreatorUpdated(tokenIdToCreator[tokenId], creator, tokenId);
 
         tokenIdToCreator[tokenId] = creator;
-    }
-
-    function _updateBeneficiary(address payable beneficiary_)
-        internal
-    {
-        emit BeneficiaryUpdated(beneficiary_);
-        beneficiary = beneficiary_;
     }
 
     /**
@@ -3017,7 +3003,7 @@ abstract contract NFT721Market is
 
         address payable[] memory result = new address payable[](2);
         result[0] = getFoundationTreasury();
-        result[1] = getTokenCreatorPaymentAddress();
+        result[1] = getTokenCreatorPaymentAddress(id);
         return result;
     }
 
@@ -3057,7 +3043,7 @@ abstract contract NFT721Market is
         );
 
         recipients[0] = getFoundationTreasury();
-        recipients[1] = getTokenCreatorPaymentAddress();
+        recipients[1] = getTokenCreatorPaymentAddress(tokenId);
         (
             ,
             uint256 secondaryF8nFeeBasisPoints,
@@ -3412,13 +3398,11 @@ contract BlingCollection is
         string memory name,
         string memory symbol,
         uint256 supply,
-        address collectionCreator,
-        address payable beneficiary
+        address collectionCreator
     ) public initializer {
-        require(msg.sender == blingMaster, "Not Authorized");
+        require(msg.sender == blingMaster, "BlingCollection: Not Authorized");
         HasSecondarySaleFees._initializeHasSecondarySaleFees(); // Leave
         NFT721Creator._initializeNFT721Creator(); // leave
-        NFT721Creator._updateBeneficiary(beneficiary);
         NFT721Mint._initializeNFT721Mint();
         NFT721Mint.initializeCreator(collectionCreator);
         FoundationTreasuryNode._initializeFoundationTreasuryNode(treasury);
@@ -3426,7 +3410,7 @@ contract BlingCollection is
     }
 
     function adminUpdateSupply(uint256 _supply) public {
-        require(msg.sender == blingMaster, "Not Authorized");
+        require(msg.sender == blingMaster, "BlingCollection: Not Authorized");
         ERC721Upgradeable._updateSupply(_supply);
     }
 
@@ -3437,20 +3421,9 @@ contract BlingCollection is
     function adminUpdateConfig(address _nftMarket, string memory baseURI)
         public
     {
-        require(msg.sender == blingMaster || _isFoundationAdmin());
+        require(msg.sender == blingMaster || _isFoundationAdmin(), "BlingCollection: Not Authorized");
         _updateNFTMarket(_nftMarket);
         _updateBaseURI(baseURI);
-    }
-
-    /**
-     * @notice Allows a Foundation admin to update NFT config variables.
-     * @dev This must be called right after the initial call to `initialize`.
-     */
-    function adminUpdateBeneficiary(address payable beneficiary_)
-        public
-    {
-        require(msg.sender == blingMaster || _isFoundationAdmin());
-        NFT721Creator._updateBeneficiary(beneficiary_);
     }
 
     /**
