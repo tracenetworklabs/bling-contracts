@@ -160,7 +160,8 @@ contract BlingMaster {
         string memory _colName,
         string memory _colDescription,
         string[] memory _colProperties,
-        uint256 _totalSupply
+        uint256 _totalSupply,
+        address payable _beneficiary
     ) external onlyWhitelistedUsers {
         collectionInfo storage collection = collections[msg.sender][_colCode];
 
@@ -178,7 +179,8 @@ contract BlingMaster {
         collection.description = _colDescription;
         collection.properties = _colProperties;
         collection.quantity = _totalSupply;
-        BlingCollection(_colContract).masterUpdateSupply(_totalSupply);
+        BlingCollection(_colContract).adminUpdateSupply(_totalSupply);
+        BlingCollection(_colContract).adminUpdateBeneficiary(_beneficiary);
 
         emit CollectionUpdated(
             msg.sender,

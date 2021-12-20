@@ -2847,6 +2847,9 @@ abstract contract NFT721Creator is
         address originalPaymentAddress,
         address newPaymentAddress
     );
+    event BeneficiaryUpdated(
+        address benefiaryAddress
+    );
 
     /*
      * bytes4(keccak256('tokenCreator(uint256)')) == 0x40c1a064
@@ -2877,9 +2880,8 @@ abstract contract NFT721Creator is
     /**
      * @dev Called once after the initial deployment to register the interface with ERC165.
      */
-    function _initializeNFT721Creator(address payable beneficiary_) internal initializer {
+    function _initializeNFT721Creator() internal initializer {
         _registerInterface(_INTERFACE_TOKEN_CREATOR);
-        beneficiary = beneficiary_;
     }
 
     /**
@@ -2922,6 +2924,13 @@ abstract contract NFT721Creator is
         emit TokenCreatorUpdated(tokenIdToCreator[tokenId], creator, tokenId);
 
         tokenIdToCreator[tokenId] = creator;
+    }
+
+    function _updateBeneficiary(address payable beneficiary_)
+        internal
+    {
+        emit BeneficiaryUpdated(beneficiary_);
+        beneficiary = beneficiary_;
     }
 
     /**
@@ -3408,14 +3417,15 @@ contract BlingCollection is
     ) public initializer {
         require(msg.sender == blingMaster, "Not Authorized");
         HasSecondarySaleFees._initializeHasSecondarySaleFees(); // Leave
-        NFT721Creator._initializeNFT721Creator(beneficiary); // leave
+        NFT721Creator._initializeNFT721Creator(); // leave
+        NFT721Creator._updateBeneficiary(beneficiary);
         NFT721Mint._initializeNFT721Mint();
         NFT721Mint.initializeCreator(collectionCreator);
         FoundationTreasuryNode._initializeFoundationTreasuryNode(treasury);
         ERC721Upgradeable.__ERC721_init(name, symbol, supply);
     }
 
-    function masterUpdateSupply(uint256 _supply) public {
+    function adminUpdateSupply(uint256 _supply) public {
         require(msg.sender == blingMaster, "Not Authorized");
         ERC721Upgradeable._updateSupply(_supply);
     }
@@ -3430,6 +3440,17 @@ contract BlingCollection is
         require(msg.sender == blingMaster || _isFoundationAdmin());
         _updateNFTMarket(_nftMarket);
         _updateBaseURI(baseURI);
+    }
+
+    /**
+     * @notice Allows a Foundation admin to update NFT config variables.
+     * @dev This must be called right after the initial call to `initialize`.
+     */
+    function adminUpdateBeneficiary(address payable beneficiary_)
+        public
+    {
+        require(msg.sender == blingMaster || _isFoundationAdmin());
+        NFT721Creator._updateBeneficiary(beneficiary_);
     }
 
     /**
