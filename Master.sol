@@ -105,7 +105,8 @@ contract BlingMaster {
         string memory _colName,
         string memory _colDescription,
         uint256 _colQuantity,
-        string[] memory _colProperties
+        string[] memory _colProperties,
+        address payable _beneficiary
     ) external onlyWhitelistedUsers returns (address collection) {
         // Add require condition to check
         require(
@@ -127,7 +128,8 @@ contract BlingMaster {
             _colCode,
             _colCode,
             _colQuantity,
-            msg.sender
+            msg.sender,
+            _beneficiary
         );
         BlingCollection(collection).adminUpdateConfig(
             nftmarket,

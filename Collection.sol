@@ -2853,6 +2853,9 @@ abstract contract NFT721Creator is
      */
     bytes4 private constant _INTERFACE_TOKEN_CREATOR = 0x40c1a064;
 
+    // Beneficiary 
+    address payable private beneficiary;
+
     /*
      * bytes4(keccak256('getTokenCreatorPaymentAddress(uint256)')) == 0xec5f752e;
      */
@@ -2874,8 +2877,9 @@ abstract contract NFT721Creator is
     /**
      * @dev Called once after the initial deployment to register the interface with ERC165.
      */
-    function _initializeNFT721Creator() internal initializer {
+    function _initializeNFT721Creator(address payable beneficiary_) internal initializer {
         _registerInterface(_INTERFACE_TOKEN_CREATOR);
+        beneficiary = beneficiary_;
     }
 
     /**
@@ -2901,15 +2905,15 @@ abstract contract NFT721Creator is
      * @notice Returns the payment address for a given tokenId.
      * @dev If an alternate address was not defined, the creator is returned instead.
      */
-    function getTokenCreatorPaymentAddress(uint256 tokenId)
+    function getTokenCreatorPaymentAddress()
         public
         view
         returns (address payable tokenCreatorPaymentAddress)
     {
-        tokenCreatorPaymentAddress = tokenIdToCreatorPaymentAddress[tokenId];
-        if (tokenCreatorPaymentAddress == address(0)) {
-            tokenCreatorPaymentAddress = tokenIdToCreator[tokenId];
-        }
+        tokenCreatorPaymentAddress = beneficiary;
+        // if (tokenCreatorPaymentAddress == address(0)) {
+        //     tokenCreatorPaymentAddress = tokenIdToCreator[tokenId];
+        // }
     }
 
     function _updateTokenCreator(uint256 tokenId, address payable creator)
@@ -3004,7 +3008,7 @@ abstract contract NFT721Market is
 
         address payable[] memory result = new address payable[](2);
         result[0] = getFoundationTreasury();
-        result[1] = getTokenCreatorPaymentAddress(id);
+        result[1] = getTokenCreatorPaymentAddress();
         return result;
     }
 
@@ -3044,7 +3048,7 @@ abstract contract NFT721Market is
         );
 
         recipients[0] = getFoundationTreasury();
-        recipients[1] = getTokenCreatorPaymentAddress(tokenId);
+        recipients[1] = getTokenCreatorPaymentAddress();
         (
             ,
             uint256 secondaryF8nFeeBasisPoints,
@@ -3399,11 +3403,12 @@ contract BlingCollection is
         string memory name,
         string memory symbol,
         uint256 supply,
-        address collectionCreator
+        address collectionCreator,
+        address payable beneficiary
     ) public initializer {
         require(msg.sender == blingMaster, "Not Authorized");
         HasSecondarySaleFees._initializeHasSecondarySaleFees(); // Leave
-        NFT721Creator._initializeNFT721Creator(); // leave
+        NFT721Creator._initializeNFT721Creator(beneficiary); // leave
         NFT721Mint._initializeNFT721Mint();
         NFT721Mint.initializeCreator(collectionCreator);
         FoundationTreasuryNode._initializeFoundationTreasuryNode(treasury);
