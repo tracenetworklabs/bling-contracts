@@ -2345,45 +2345,6 @@ abstract contract NFTMarketReserveAuction is
 
 // File contracts/FNDNFTMarket.sol
 
-/*
-  ･
-   *　★
-      ･ ｡
-        　･　ﾟ☆ ｡
-  　　　 *　★ ﾟ･｡ *  ｡
-          　　* ☆ ｡･ﾟ*.｡
-      　　　ﾟ *.｡☆｡★　･
-​
-                      `                     .-:::::-.`              `-::---...```
-                     `-:`               .:+ssssoooo++//:.`       .-/+shhhhhhhhhhhhhyyyssooo:
-                    .--::.            .+ossso+/////++/:://-`   .////+shhhhhhhhhhhhhhhhhhhhhy
-                  `-----::.         `/+////+++///+++/:--:/+/-  -////+shhhhhhhhhhhhhhhhhhhhhy
-                 `------:::-`      `//-.``.-/+ooosso+:-.-/oso- -////+shhhhhhhhhhhhhhhhhhhhhy
-                .--------:::-`     :+:.`  .-/osyyyyyyso++syhyo.-////+shhhhhhhhhhhhhhhhhhhhhy
-              `-----------:::-.    +o+:-.-:/oyhhhhhhdhhhhhdddy:-////+shhhhhhhhhhhhhhhhhhhhhy
-             .------------::::--  `oys+/::/+shhhhhhhdddddddddy/-////+shhhhhhhhhhhhhhhhhhhhhy
-            .--------------:::::-` +ys+////+yhhhhhhhddddddddhy:-////+yhhhhhhhhhhhhhhhhhhhhhy
-          `----------------::::::-`.ss+/:::+oyhhhhhhhhhhhhhhho`-////+shhhhhhhhhhhhhhhhhhhhhy
-         .------------------:::::::.-so//::/+osyyyhhhhhhhhhys` -////+shhhhhhhhhhhhhhhhhhhhhy
-       `.-------------------::/:::::..+o+////+oosssyyyyyyys+`  .////+shhhhhhhhhhhhhhhhhhhhhy
-       .--------------------::/:::.`   -+o++++++oooosssss/.     `-//+shhhhhhhhhhhhhhhhhhhhyo
-     .-------   ``````.......--`        `-/+ooooosso+/-`          `./++++///:::--...``hhhhyo
-                                              `````
-   *　
-      ･ ｡
-　　　　･　　ﾟ☆ ｡
-  　　　 *　★ ﾟ･｡ *  ｡
-          　　* ☆ ｡･ﾟ*.｡
-      　　　ﾟ *.｡☆｡★　･
-    *　　ﾟ｡·*･｡ ﾟ*
-  　　　☆ﾟ･｡°*. ﾟ
-　 ･ ﾟ*｡･ﾟ★｡
-　　･ *ﾟ｡　　 *
-　･ﾟ*｡★･
- ☆∴｡　*
-･ ｡
-*/
-
 pragma solidity ^0.7.0;
 pragma abicoder v2; // solhint-disable-line
 

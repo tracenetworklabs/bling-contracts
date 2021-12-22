@@ -71,10 +71,7 @@ contract BlingMaster {
      * @dev Modifier to protect an initializer function from being invoked twice.
      */
     modifier onlyWhitelistedUsers() {
-        require(
-            whitelisted[msg.sender],
-            "BlingMaster: Address Not Authorized"
-        );
+        require(whitelisted[msg.sender], "BlingMaster: Address Not Authorized");
         _;
     }
 
