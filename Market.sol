@@ -1,4 +1,8 @@
 /**
+ *Submitted for verification at polygonscan.com on 2021-12-17
+*/
+
+/**
  *Submitted for verification at polygonscan.com on 2021-10-20
  */
 
@@ -1855,7 +1859,8 @@ abstract contract NFTMarketReserveAuction is
     mapping(uint256 => ReserveAuction) private auctionIdToAuction;
 
     mapping(address => bool) public tokens;
-
+    address[] addedTokenAddress;
+    
     uint256 private _minPercentIncrementInBasisPoints;
 
     // This variable was used in an older version of the contract, left here as a gap to ensure upgrade compatibility
@@ -2262,8 +2267,16 @@ abstract contract NFTMarketReserveAuction is
     {
         for (uint160 i; i < tokenAddress.length; i++) {
             tokens[tokenAddress[i]] = status[i];
+            addedTokenAddress.push(tokenAddress[i]);
         }
         emit TokenAdded(tokenAddress, status);
+    }
+
+    /**
+     * @notice Returns token address.
+     */
+    function getTokenAddress() public view returns(address[] memory) {
+        return addedTokenAddress;
     }
 
     /**
