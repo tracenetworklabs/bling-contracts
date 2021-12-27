@@ -2547,6 +2547,32 @@ interface IERC1271 {
         returns (bytes4 magicValue);
 }
 
+// File contracts/libraries/AddressLibrary.sol
+
+pragma solidity ^0.7.0;
+
+/**
+ * @dev Named this way to avoid conflicts with `Address` from OZ.
+ */
+library AddressLibrary {
+    using Address for address;
+
+    function functionCallAndReturnAddress(
+        address paymentAddressFactory,
+        bytes memory paymentAddressCallData
+    ) internal returns (address payable result) {
+        bytes memory returnData = paymentAddressFactory.functionCall(
+            paymentAddressCallData
+        );
+
+        // Skip the length at the start of the bytes array and return the data, casted to an address
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            result := mload(add(returnData, 32))
+        }
+    }
+}
+
 // File contracts/mixins/NFT721Creator.sol
 
 pragma solidity ^0.7.0;
@@ -2555,6 +2581,7 @@ pragma solidity ^0.7.0;
  * @notice Allows each token to be associated with a creator.
  */
 abstract contract NFT721Creator is Initializable, ERC721Upgradeable {
+    using AddressLibrary for address;
 
     mapping(uint256 => address payable) private tokenIdToCreator;
 
@@ -2885,6 +2912,7 @@ abstract contract NFT721Mint is
     NFT721Metadata,
     FoundationAdminRole
 {
+    using AddressLibrary for address;
     address private collectionCreator;
     uint256 private nextTokenId;
 
@@ -2955,19 +2983,6 @@ abstract contract NFT721Mint is
     }
 
     /**
-     * @notice Allows a creator to mint an NFT and set approval for the Foundation marketplace.
-     * This can be used by creators the first time they mint an NFT to save having to issue a separate
-     * approval transaction before starting an auction.
-     */
-    function mintAndApproveMarket(string memory tokenIPFSPath)
-        public
-        returns (uint256 tokenId)
-    {
-        tokenId = mint(tokenIPFSPath);
-        setApprovalForAll(getNFTMarket(), true);
-    }
-
-    /**
      * @notice Allows a creator to mint an NFT and have creator revenue/royalties sent to an alternate address.
      */
     function mintWithCreatorPaymentAddress(
@@ -2983,19 +2998,20 @@ abstract contract NFT721Mint is
     }
 
     /**
-     * @notice Allows a creator to mint an NFT and have creator revenue/royalties sent to an alternate address.
-     * Also sets approval for the Foundation marketplace.  This can be used by creators the first time they mint an NFT to
-     * save having to issue a separate approval transaction before starting an auction.
+     * @notice Allows a creator to mint an NFT and have creator revenue/royalties sent to an alternate address
+     * which is defined by a contract call, typically a proxy contract address representing the payment terms.
      */
-    function mintWithCreatorPaymentAddressAndApproveMarket(
+    function mintWithCreatorPaymentFactory(
         string memory tokenIPFSPath,
-        address payable tokenCreatorPaymentAddress
-    ) public returns (uint256 tokenId) {
+        address paymentAddressFactory,
+        bytes memory paymentAddressCallData
+    ) public onlyCollectionCreator returns (uint256 tokenId) {
+        address payable tokenCreatorPaymentAddress = paymentAddressFactory
+            .functionCallAndReturnAddress(paymentAddressCallData);
         tokenId = mintWithCreatorPaymentAddress(
             tokenIPFSPath,
             tokenCreatorPaymentAddress
         );
-        setApprovalForAll(getNFTMarket(), true);
     }
 
     /**
