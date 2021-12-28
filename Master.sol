@@ -13,6 +13,8 @@ contract BlingMaster {
     address payable nftmarket;
     address payable admin;
 
+    address payable paymentAddressFactory;
+
     struct collectionInfo {
         // the collection name
         string name;
@@ -24,8 +26,13 @@ contract BlingMaster {
         string[] properties;
         // the contract address
         address myContract;
-        // the beneficiary address
-        address payable beneficiary;
+        // Payment split
+        address payable paymentSplit;
+    }
+
+    struct Share {
+        address payable recipient;
+        uint256 percentInBasisPoints;
     }
 
     constructor(address payable _treasury, address payable _nftMarket) {
@@ -34,12 +41,14 @@ contract BlingMaster {
         admin = msg.sender;
     }
 
+    // Share[] public shares;
     // collection info mapping
     mapping(address => mapping(string => collectionInfo)) public collections;
     // get collection
     mapping(address => mapping(string => address)) public getCollection;
     mapping(address => string) public getCode;
     mapping(address => string) public brandName;
+    mapping(address => Share[]) public shares;
 
     mapping(address => bool) public whitelisted;
 
@@ -51,7 +60,7 @@ contract BlingMaster {
         string[] ColProperties,
         address myContract,
         uint256 quantity,
-        address beneficiary
+        address payable split
     );
 
     event Whitelist(address[] brand, string[] name, bool[] status);
@@ -64,7 +73,7 @@ contract BlingMaster {
         string[] ColProperties,
         address myContract,
         uint256 quantity,
-        address beneficiary
+        address payable split
     );
 
     /**
@@ -107,8 +116,12 @@ contract BlingMaster {
         string memory _colDescription,
         uint256 _colQuantity,
         string[] memory _colProperties,
-        address payable _beneficiary
-    ) external onlyWhitelistedUsers returns (address collection) {
+        bytes memory paymentAddressCallData
+    )
+        external
+        onlyWhitelistedUsers
+        returns (address collection, address payable split)
+    {
         // Add require condition to check
         require(
             getCollection[msg.sender][_colCode] == address(0),
@@ -121,6 +134,8 @@ contract BlingMaster {
         assembly {
             collection := create2(0, add(bytecode, 32), mload(bytecode), salt)
         }
+
+        split = getPaymentAddress(paymentAddressCallData);
 
         getCollection[msg.sender][_colCode] = collection;
         getCode[collection] = _colCode;
@@ -141,8 +156,9 @@ contract BlingMaster {
             description: _colDescription,
             properties: _colProperties,
             myContract: collection,
-            beneficiary: _beneficiary
+            paymentSplit: split
         });
+        // shares[collection] = _shares;
 
         emit CollectionCreated(
             msg.sender,
@@ -152,7 +168,7 @@ contract BlingMaster {
             _colProperties,
             collection,
             _colQuantity,
-            _beneficiary
+            split
         );
     }
 
@@ -163,7 +179,7 @@ contract BlingMaster {
         string memory _colDescription,
         string[] memory _colProperties,
         uint256 _totalSupply,
-        address payable _beneficiary
+        bytes memory paymentAddressCallData
     ) external onlyWhitelistedUsers {
         collectionInfo storage collection = collections[msg.sender][_colCode];
 
@@ -177,11 +193,13 @@ contract BlingMaster {
             "BlingMaster: UPDATE_NOT_ALLOWED"
         ); // single check is sufficient
 
+        address payable _split = getPaymentAddress(paymentAddressCallData);
+
         collection.name = _colName;
         collection.description = _colDescription;
         collection.properties = _colProperties;
         collection.quantity = _totalSupply;
-        collection.beneficiary = _beneficiary;
+        collection.paymentSplit = _split;
         BlingCollection(_colContract).adminUpdateSupply(_totalSupply);
 
         emit CollectionUpdated(
@@ -192,7 +210,7 @@ contract BlingMaster {
             _colProperties,
             _colContract,
             _totalSupply,
-            _beneficiary
+            _split
         );
     }
 
@@ -226,5 +244,20 @@ contract BlingMaster {
             "BlingMaster: COLLECTION_NOT_EXISTS"
         );
         BlingCollection(_colContract).adminUpdateConfig(_nftMarket, baseURI);
+    }
+
+    function getPaymentAddress(bytes memory paymentAddressCallData)
+        internal
+        returns (address payable split)
+    {
+        (bool success, bytes memory returndata) = paymentAddressFactory.call{
+            value: 0
+        }(paymentAddressCallData);
+
+        if (success) {
+            assembly {
+                split := mload(add(returndata, 32))
+            }
+        }
     }
 }
