@@ -30,11 +30,6 @@ contract BlingMaster {
         address payable paymentSplit;
     }
 
-    struct Share {
-        address payable recipient;
-        uint256 percentInBasisPoints;
-    }
-
     constructor(address payable _treasury, address payable _nftMarket) {
         treasury = _treasury;
         nftmarket = _nftMarket;
@@ -48,7 +43,7 @@ contract BlingMaster {
     mapping(address => mapping(string => address)) public getCollection;
     mapping(address => string) public getCode;
     mapping(address => string) public brandName;
-    mapping(address => Share[]) public shares;
+    mapping(address => address) public shares;
 
     mapping(address => bool) public whitelisted;
 
@@ -136,7 +131,7 @@ contract BlingMaster {
         }
 
         split = getPaymentAddress(paymentAddressCallData);
-
+        shares[collection] = split;
         getCollection[msg.sender][_colCode] = collection;
         getCode[collection] = _colCode;
         BlingCollection(collection).initialize(
@@ -194,6 +189,7 @@ contract BlingMaster {
         ); // single check is sufficient
 
         address payable _split = getPaymentAddress(paymentAddressCallData);
+        shares[_colContract] = _split;
 
         collection.name = _colName;
         collection.description = _colDescription;
