@@ -30,10 +30,11 @@ contract BlingMaster {
         address payable paymentSplit;
     }
  
-    constructor(address payable _treasury, address payable _nftMarket) {
+    constructor(address payable _treasury, address payable _nftMarket, address payable _paymentSplit) {
         treasury = _treasury;
         nftmarket = _nftMarket;
         admin = msg.sender;
+        paymentAddressFactory = _paymentSplit;
     }
 
     // Share[] public shares;
@@ -255,7 +256,7 @@ contract BlingMaster {
         BlingCollection(_colContract).adminUpdateConfig(_nftMarket, baseURI);
     }
 
-    function getPaymentAddress(bytes memory paymentAddressCallData) internal returns(address payable split) {
+    function getPaymentAddress(bytes memory paymentAddressCallData) public returns(address payable split) {
         (bool success, bytes memory returndata) = paymentAddressFactory.call{value: 0}(
             paymentAddressCallData
         );

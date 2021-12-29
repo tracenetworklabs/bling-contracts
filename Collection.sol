@@ -2998,23 +2998,6 @@ abstract contract NFT721Mint is
         setApprovalForAll(getNFTMarket(), true);
     }
 
-    // /**
-    //  * @notice Allows a creator to mint an NFT and have creator revenue/royalties sent to an alternate address
-    //  * which is defined by a contract call, typically a proxy contract address representing the payment terms.
-    //  */
-    // function mintWithCreatorPaymentFactory(
-    //     string memory tokenIPFSPath,
-    //     address paymentAddressFactory,
-    //     bytes memory paymentAddressCallData
-    // ) public onlyCollectionCreator returns (uint256 tokenId) {
-    //     address payable tokenCreatorPaymentAddress = paymentAddressFactory
-    //         .functionCallAndReturnAddress(paymentAddressCallData);
-    //     tokenId = mintWithCreatorPaymentAddress(
-    //         tokenIPFSPath,
-    //         tokenCreatorPaymentAddress
-    //     );
-    // }
-
     /**
      * @notice Allows a creator to update an NFT.
      */
