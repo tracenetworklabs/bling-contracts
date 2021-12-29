@@ -2955,6 +2955,19 @@ abstract contract NFT721Mint is
     }
 
     /**
+     * @notice Allows a creator to mint an NFT and set approval for the Foundation marketplace.
+     * This can be used by creators the first time they mint an NFT to save having to issue a separate
+     * approval transaction before starting an auction.
+     */
+    function mintAndApproveMarket(string memory tokenIPFSPath)
+        public
+        returns (uint256 tokenId)
+    {
+        tokenId = mint(tokenIPFSPath);
+        setApprovalForAll(getNFTMarket(), true);
+    }
+
+    /**
      * @notice Allows a creator to mint an NFT and have creator revenue/royalties sent to an alternate address.
      */
     function mintWithCreatorPaymentAddress(
@@ -2967,6 +2980,22 @@ abstract contract NFT721Mint is
         );
         tokenId = mint(tokenIPFSPath);
         _setTokenCreatorPaymentAddress(tokenId, tokenCreatorPaymentAddress);
+    }
+
+    /**
+     * @notice Allows a creator to mint an NFT and have creator revenue/royalties sent to an alternate address.
+     * Also sets approval for the Foundation marketplace.  This can be used by creators the first time they mint an NFT to
+     * save having to issue a separate approval transaction before starting an auction.
+     */
+    function mintWithCreatorPaymentAddressAndApproveMarket(
+        string memory tokenIPFSPath,
+        address payable tokenCreatorPaymentAddress
+    ) public returns (uint256 tokenId) {
+        tokenId = mintWithCreatorPaymentAddress(
+            tokenIPFSPath,
+            tokenCreatorPaymentAddress
+        );
+        setApprovalForAll(getNFTMarket(), true);
     }
 
     // /**
