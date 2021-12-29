@@ -29,7 +29,7 @@ contract BlingMaster {
         // Payment split
         address payable paymentSplit;
     }
-
+ 
     constructor(address payable _treasury, address payable _nftMarket) {
         treasury = _treasury;
         nftmarket = _nftMarket;
@@ -44,6 +44,7 @@ contract BlingMaster {
     mapping(address => string) public getCode;
     mapping(address => string) public brandName;
     mapping(address => address) public shares;
+
 
     mapping(address => bool) public whitelisted;
 
@@ -75,7 +76,10 @@ contract BlingMaster {
      * @dev Modifier to protect an initializer function from being invoked twice.
      */
     modifier onlyWhitelistedUsers() {
-        require(whitelisted[msg.sender], "BlingMaster: Address Not Authorized");
+        require(
+            whitelisted[msg.sender],
+            "BlingMaster: Address Not Authorized"
+        );
         _;
     }
 
@@ -111,12 +115,9 @@ contract BlingMaster {
         string memory _colDescription,
         uint256 _colQuantity,
         string[] memory _colProperties,
+        address payable _beneficiary,
         bytes memory paymentAddressCallData
-    )
-        external
-        onlyWhitelistedUsers
-        returns (address collection, address payable split)
-    {
+    ) external onlyWhitelistedUsers returns (address collection, address payable split) {
         // Add require condition to check
         require(
             getCollection[msg.sender][_colCode] == address(0),
@@ -130,8 +131,13 @@ contract BlingMaster {
             collection := create2(0, add(bytecode, 32), mload(bytecode), salt)
         }
 
-        split = getPaymentAddress(paymentAddressCallData);
+        if(_beneficiary == address(0))
+            split = getPaymentAddress(paymentAddressCallData);
+        else
+            split = _beneficiary;
+
         shares[collection] = split;
+
         getCollection[msg.sender][_colCode] = collection;
         getCode[collection] = _colCode;
         BlingCollection(collection).initialize(
@@ -174,6 +180,7 @@ contract BlingMaster {
         string memory _colDescription,
         string[] memory _colProperties,
         uint256 _totalSupply,
+        address payable _beneficiary,
         bytes memory paymentAddressCallData
     ) external onlyWhitelistedUsers {
         collectionInfo storage collection = collections[msg.sender][_colCode];
@@ -188,7 +195,13 @@ contract BlingMaster {
             "BlingMaster: UPDATE_NOT_ALLOWED"
         ); // single check is sufficient
 
-        address payable _split = getPaymentAddress(paymentAddressCallData);
+        address payable _split;
+
+        if(_beneficiary == address(0))
+            _split = getPaymentAddress(paymentAddressCallData);
+        else
+            _split = _beneficiary;
+
         shares[_colContract] = _split;
 
         collection.name = _colName;
@@ -242,13 +255,10 @@ contract BlingMaster {
         BlingCollection(_colContract).adminUpdateConfig(_nftMarket, baseURI);
     }
 
-    function getPaymentAddress(bytes memory paymentAddressCallData)
-        internal
-        returns (address payable split)
-    {
-        (bool success, bytes memory returndata) = paymentAddressFactory.call{
-            value: 0
-        }(paymentAddressCallData);
+    function getPaymentAddress(bytes memory paymentAddressCallData) internal returns(address payable split) {
+        (bool success, bytes memory returndata) = paymentAddressFactory.call{value: 0}(
+            paymentAddressCallData
+        );
 
         if (success) {
             assembly {
