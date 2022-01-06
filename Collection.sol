@@ -3005,7 +3005,7 @@ abstract contract NFT721Mint is
         public
     {
         address owner = ownerOf(tokenId);
-        require(msg.sender == owner, "Not Authorized");
+        require(msg.sender == owner, "NFT721Mint: Not Authorized");
         _setTokenIPFSPath(tokenId, tokenIPFSPath);
         emit Updated(msg.sender, tokenId, tokenIPFSPath, tokenIPFSPath);
     }

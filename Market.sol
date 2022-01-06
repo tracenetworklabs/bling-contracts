@@ -1859,7 +1859,6 @@ abstract contract NFTMarketReserveAuction is
     mapping(uint256 => ReserveAuction) private auctionIdToAuction;
 
     mapping(address => bool) public tokens;
-    address[] addedTokenAddress;
     
     uint256 private _minPercentIncrementInBasisPoints;
 
@@ -1916,7 +1915,7 @@ abstract contract NFTMarketReserveAuction is
         address indexed originalSellerAddress,
         address indexed newSellerAddress
     );
-    event TokenAdded(address[] indexed tokenAddress, bool[] indexed status);
+    event TokenUpdated(address indexed tokenAddress, bool indexed status);
 
     modifier onlyValidAuctionConfig(uint256 reservePrice) {
         require(
@@ -2019,7 +2018,7 @@ abstract contract NFTMarketReserveAuction is
         uint256 endDate,
         address paymentMode
     ) public onlyValidAuctionConfig(reservePrice) nonReentrant {
-        require(tokens[paymentMode], "Token not supported");
+        require(tokens[paymentMode], "NFTMarketReserveAuction: Token not supported");
         // If an auction is already in progress then the NFT would be in escrow and the modifier would have failed
         uint256 extraTimeForExecution = 10 minutes;
         require(
@@ -2261,22 +2260,12 @@ abstract contract NFTMarketReserveAuction is
     /**
      * @notice Allows Foundation to add token address.
      */
-    function adminUpdateToken(address[] memory tokenAddress, bool[] memory status)
+    function adminUpdateToken(address tokenAddress, bool status)
         public
         onlyFoundationAdmin
     {
-        for (uint160 i; i < tokenAddress.length; i++) {
-            tokens[tokenAddress[i]] = status[i];
-            addedTokenAddress.push(tokenAddress[i]);
-        }
-        emit TokenAdded(tokenAddress, status);
-    }
-
-    /**
-     * @notice Returns token address.
-     */
-    function getTokenAddress() public view returns(address[] memory) {
-        return addedTokenAddress;
+        tokens[tokenAddress] = status;
+        emit TokenUpdated(tokenAddress, status);
     }
 
     /**
