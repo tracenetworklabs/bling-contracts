@@ -719,7 +719,7 @@ contract PercentSplitETH is Initializable {
    * This must be called on the original implementation and not a proxy created previously.
    */
   function createSplit(Share[] memory shares) public returns (PercentSplitETH splitInstance) {
-    bytes32 salt = keccak256(abi.encode(shares));
+    bytes32 salt = keccak256(abi.encode(shares, block.number));
     address clone = Clones.predictDeterministicAddress(address(this), salt);
     splitInstance = PercentSplitETH(payable(clone));
     if (!clone.isContract()) {

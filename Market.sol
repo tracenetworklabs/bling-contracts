@@ -2456,6 +2456,9 @@ abstract contract NFTMarketReserveAuction is
         onlyFoundationAdmin
     {
         tokens[tokenAddress] = status;
+        if(tokenAddress == address(0)) {
+            TokenUpdated(tokenAddress, status, "Matic")
+        }
         emit TokenUpdated(tokenAddress, status, IERC20(tokenAddress).name());
     }
 
