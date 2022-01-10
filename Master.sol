@@ -60,7 +60,7 @@ contract BlingMaster {
         address payable split
     );
 
-    event Whitelist(address[] brand, string[] name, bool[] status);
+    event Whitelist(address brand, string name, bool status);
 
     event CollectionUpdated(
         address creator,
@@ -106,8 +106,9 @@ contract BlingMaster {
         for (uint256 i; i < brands.length; i++) {
             whitelisted[brands[i]] = status[i];
             brandName[brands[i]] = name[i];
+            emit Whitelist(brands[i], name[i], status[i]);
         }
-        emit Whitelist(brands, name, status);
+        // emit Whitelist(brands, name, status);
     }
 
     function createCollection(
