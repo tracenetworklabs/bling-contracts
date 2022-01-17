@@ -1363,7 +1363,6 @@ abstract contract NFTMarketPrivateSale is NFTMarketFees {
         uint256 indexed tokenId,
         address indexed seller,
         address buyer,
-        uint256 f8nFee,
         uint256 creatorFee,
         uint256 ownerRev,
         uint256 deadline
@@ -1444,7 +1443,7 @@ abstract contract NFTMarketPrivateSale is NFTMarketFees {
         nftContract.transferFrom(seller, msg.sender, tokenId);
         // Pay the seller, creator, and Foundation as appropriate.
         (
-            uint256 f8nFee,
+             ,
             uint256 creatorFee,
             uint256 ownerRev
         ) = _distributeFunds(
@@ -1461,7 +1460,6 @@ abstract contract NFTMarketPrivateSale is NFTMarketFees {
             tokenId,
             seller,
             msg.sender,
-            f8nFee,
             creatorFee,
             ownerRev,
             deadline
@@ -2083,8 +2081,7 @@ abstract contract NFTMarketReserveAuction is
         uint256 indexed tokenId,
         uint256 reservePrice,
         uint256 auctionId,
-        address paymentMode,
-        string name
+        address paymentMode
     );
     event ReserveAuctionUpdated(
         uint256 indexed auctionId,
@@ -2183,10 +2180,6 @@ abstract contract NFTMarketReserveAuction is
         duration = EXTENSION_DURATION;
     }
 
-    // function _initializeNFTMarketReserveAuction() internal {
-    //     _duration = 24 hours; // A sensible default value
-    // }
-
     function _updateReserveAuctionConfig(
         uint256 minPercentIncrementInBasisPoints,
         uint256 duration
@@ -2248,25 +2241,13 @@ abstract contract NFTMarketReserveAuction is
             tokenId
         );
 
-        if (paymentMode == address(0))
-            emit ReserveAuctionCreated(
+        emit ReserveAuctionCreated(
                 msg.sender,
                 nftContract,
                 tokenId,
                 reservePrice,
                 auctionId,
-                paymentMode,
-                "MATIC"
-            );
-        else
-            emit ReserveAuctionCreated(
-                msg.sender,
-                nftContract,
-                tokenId,
-                reservePrice,
-                auctionId,
-                paymentMode,
-                IERC20(paymentMode).name()
+                paymentMode
             );
     }
 
@@ -2576,7 +2557,8 @@ contract BlingMarket is
     SendValueWithFallbackWithdraw,
     NFTMarketFees,
     NFTMarketAuction,
-    NFTMarketReserveAuction
+    NFTMarketReserveAuction,
+    NFTMarketPrivateSale
 {
     /**
      * @notice Called once to configure the contract after the initial deployment.
@@ -2585,7 +2567,6 @@ contract BlingMarket is
     function initialize(address payable treasury) public initializer {
         FoundationTreasuryNode._initializeFoundationTreasuryNode(treasury);
         NFTMarketAuction._initializeNFTMarketAuction();
-        // NFTMarketReserveAuction._initializeNFTMarketReserveAuction();
     }
 
     /**
