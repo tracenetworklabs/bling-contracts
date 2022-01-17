@@ -2579,6 +2579,7 @@ contract BlingMarket is
         uint256 secondaryF8nFeeBasisPoints,
         uint256 secondaryCreatorFeeBasisPoints
     ) public onlyFoundationAdmin {
+        _reinitialize();
         _updateReserveAuctionConfig(minPercentIncrementInBasisPoints, duration);
         _updateMarketFees(
             primaryF8nFeeBasisPoints,
