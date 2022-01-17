@@ -1341,7 +1341,7 @@ abstract contract NFTMarketPrivateSale is NFTMarketFees {
      * @dev This name is used in the EIP-712 domain.
      * If multiple classes use EIP-712 signatures in the future this can move to the shared constants file.
      */
-    string private constant NAME = "FNDNFTMarket";
+    string private constant NAME = "BlingMarket";
     /**
      * @dev This is a hash of the method signature used in the EIP-712 signature for private sales.
      */
