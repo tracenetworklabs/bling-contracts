@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.7.6;
 
 // File @openzeppelin/contracts-upgradeable/introspection/IERC165Upgradeable.sol@v3.4.1-solc-0.7
@@ -184,6 +185,7 @@ interface IERC721Upgradeable is IERC165Upgradeable {
     ) external;
 }
 
+
 contract Signature {
     /**
      * @dev This is the domain used in EIP-712 signatures.
@@ -191,6 +193,8 @@ contract Signature {
      * If multiple classes use EIP-712 signatures in the future this can move to a shared file.
      */
     bytes32 public DOMAIN_SEPARATOR;
+
+    string private constant NAME = "BlingMarket";
     /**
      * @dev This is a hash of the method signature used in the EIP-712 signature for private sales.
      */
@@ -198,8 +202,9 @@ contract Signature {
         keccak256(
             "BuyFromPrivateSale(address nftContract,uint256 tokenId,address buyer,uint256 price,uint256 deadline)"
         );
-
-    constructor() {
+    address payable BlingMarket;
+    constructor(address payable _BlingMarket) {
+         BlingMarket = _BlingMarket;
         _reinitialize();
     }
 
@@ -218,10 +223,10 @@ contract Signature {
                 keccak256(
                     "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
                 ),
-                keccak256(bytes("BlingMarket")),
+                keccak256(bytes(NAME)),
                 keccak256(bytes("1")),
                 chainId,
-                address(this)
+                BlingMarket
             )
         );
     }
@@ -230,6 +235,7 @@ contract Signature {
         IERC721Upgradeable nftContract,
         uint256 amount,
         uint256 tokenId,
+        address buyer,
         uint256 deadline
     ) public view returns (bytes32) {
         bytes32 digest = keccak256(
@@ -241,7 +247,7 @@ contract Signature {
                         BUY_FROM_PRIVATE_SALE_TYPEHASH,
                         nftContract,
                         tokenId,
-                        msg.sender,
+                        buyer,
                         amount,
                         deadline
                     )
@@ -269,6 +275,7 @@ contract Signature {
         s := mload(add(sig, 64))
         // final byte (first byte of the next 32 bytes)
         v := byte(0, mload(add(sig, 96)))
+
     }
 
     return (v, r, s);
@@ -281,5 +288,21 @@ contract Signature {
         bytes32 s
     ) public pure returns (address seller) {
         seller = ecrecover(digest, v, r, s);
+    }
+
+
+    function getEthSignedMessageHash(bytes32 _messageHash)
+        public
+        pure
+        returns (bytes32)
+    {
+        /*
+        Signature is produced by signing a keccak256 hash with the following format:
+        "\x19Ethereum Signed Message\n" + len(msg) + msg
+        */
+        return
+            keccak256(
+                abi.encodePacked("\x19Ethereum Signed Message:\n32", _messageHash)
+            );
     }
 }
