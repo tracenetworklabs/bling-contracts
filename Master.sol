@@ -79,7 +79,7 @@ contract BlingMaster {
     modifier onlyWhitelistedUsers() {
         require(
             whitelisted[msg.sender],
-            "BlingMaster: Address Not Authorized"
+            "BlingMaster:ADDRESS_NOT_WHITELISTED"
         );
         _;
     }
@@ -90,7 +90,7 @@ contract BlingMaster {
     modifier onlyOwner() {
         require(
             IAdminRole(treasury).isAdmin(msg.sender),
-            "BlingMaster: Address Not Authorized"
+            "BlingMaster:ADDRESS_NOT_AUTHORIZED"
         );
         _;
     }
@@ -123,7 +123,7 @@ contract BlingMaster {
         // Add require condition to check
         require(
             getCollection[msg.sender][_colCode] == address(0),
-            "BlingMaster: COLLECTION_EXISTS"
+            "BlingMaster:COLLECTION_EXISTS"
         ); // single check is sufficient
 
         bytes memory bytecode = type(BlingCollection).creationCode;
@@ -189,12 +189,12 @@ contract BlingMaster {
 
         require(
             getCollection[msg.sender][_colCode] == _colContract,
-            "BlingMaster: COLLECTION_NOT_EXISTS"
+            "BlingMaster:COLLECTION_NOT_EXISTS"
         );
         // Add require condition to check
         require(
             (BlingCollection(_colContract).getNextTokenId() - 1) == 0,
-            "BlingMaster: UPDATE_NOT_ALLOWED"
+            "BlingMaster:COLLECTION_UPDATE_NOT_ALLOWED"
         ); // single check is sufficient
 
         address payable _split;
@@ -252,7 +252,7 @@ contract BlingMaster {
     ) public onlyOwner {
         require(
             getCollection[msg.sender][_colCode] == _colContract,
-            "BlingMaster: COLLECTION_NOT_EXISTS"
+            "BlingMaster:COLLECTION_NOT_EXISTS"
         );
         BlingCollection(_colContract).adminUpdateConfig(_nftMarket, baseURI);
     }
