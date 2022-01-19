@@ -2909,7 +2909,7 @@ abstract contract NFT721Mint is
     modifier onlyCollectionCreator() {
         require(
             msg.sender == collectionCreator,
-            "NFT721Mint: Address not Authorized"
+            "NFT721Mint:MINT_ADDRESS_NOT_AUTHORIZED"
         );
         _;
     }
@@ -2945,7 +2945,7 @@ abstract contract NFT721Mint is
         if (_supply != 0) {
             require(
                 tokenId <= _supply,
-                "NFT721Mint: Cannot mint more than fixed totalSupply"
+                "NFT721Mint:MINT_LIMIT_TOTALSUPPLY"
             );
         }
         _mint(msg.sender, tokenId);
@@ -2976,7 +2976,7 @@ abstract contract NFT721Mint is
     ) public onlyCollectionCreator returns (uint256 tokenId) {
         require(
             tokenCreatorPaymentAddress != address(0),
-            "NFT721Mint: tokenCreatorPaymentAddress is required"
+            "NFT721Mint:TOKEN_CREATOR_PAYMENT_ADDRESS_IS_REQUIRED"
         );
         tokenId = mint(tokenIPFSPath);
         _setTokenCreatorPaymentAddress(tokenId, tokenCreatorPaymentAddress);
@@ -3005,7 +3005,7 @@ abstract contract NFT721Mint is
         public
     {
         address owner = ownerOf(tokenId);
-        require(msg.sender == owner, "NFT721Mint: Not Authorized");
+        require(msg.sender == owner, "NFT721Mint:ADDRESS_NOT_AUTHORIZED");
         _setTokenIPFSPath(tokenId, tokenIPFSPath);
         emit Updated(msg.sender, tokenId, tokenIPFSPath, tokenIPFSPath);
     }
@@ -3060,7 +3060,7 @@ contract BlingCollection is
         uint256 supply,
         address collectionCreator
     ) public initializer {
-        require(msg.sender == blingMaster, "BlingCollection: Not Authorized");
+        require(msg.sender == blingMaster, "BlingCollection:ADDRESS_NOT_AUTHORIZED");
         HasSecondarySaleFees._initializeHasSecondarySaleFees(); // Leave
         NFT721Creator._initializeNFT721Creator(); // leave
         NFT721Mint._initializeNFT721Mint(collectionCreator);
@@ -3069,7 +3069,7 @@ contract BlingCollection is
     }
 
     function adminUpdateSupply(uint256 _supply) public {
-        require(msg.sender == blingMaster, "BlingCollection: Not Authorized");
+        require(msg.sender == blingMaster, "BlingCollection:ADDRESS_NOT_AUTHORIZED");
         ERC721Upgradeable._updateSupply(_supply);
     }
 
@@ -3082,7 +3082,7 @@ contract BlingCollection is
     {
         require(
             msg.sender == blingMaster || _isFoundationAdmin(),
-            "BlingCollection: Not Authorized"
+            "BlingCollection:ADDRESS_NOT_AUTHORIZED"
         );
         _updateNFTMarket(_nftMarket);
         _updateBaseURI(baseURI);
