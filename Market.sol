@@ -1408,7 +1408,7 @@ abstract contract NFTMarketPrivateSale is NFTMarketFees {
         bytes32 s
     ) public payable {
         // The signed message from the seller is only valid for a limited time.
-        require(deadline >= block.timestamp, "NFTMarketPrivateSale: EXPIRED");
+        require(deadline >= block.timestamp, "NFTMarketPrivateSale:EXPIRED");
         // The seller must have the NFT in their wallet when this function is called.
         address payable seller = payable(nftContract.ownerOf(tokenId));
 
@@ -1432,10 +1432,15 @@ abstract contract NFTMarketPrivateSale is NFTMarketFees {
                     )
                 )
             );
+
+            digest = keccak256(
+                abi.encodePacked("\x19Ethereum Signed Message:\n32", digest)
+            );
+    
             // Revert if the signature is invalid, the terms are not as expected, or if the seller transferred the NFT.
             require(
                 ecrecover(digest, v, r, s) == seller,
-                "NFTMarketPrivateSale: INVALID_SIGNATURE"
+                "NFTMarketPrivateSale:INVALID_SIGNATURE"
             );
         }
 
@@ -2214,13 +2219,13 @@ abstract contract NFTMarketReserveAuction is
         uint256 endDate,
         address paymentMode
     ) public onlyValidAuctionConfig(reservePrice) nonReentrant {
-        require(tokens[paymentMode], "NFTMarketReserveAuction: Token not supported");
+        require(tokens[paymentMode], "NFTMarketReserveAuction:TOKEN_NOT_SUPPORTED");
         // If an auction is already in progress then the NFT would be in escrow and the modifier would have failed
         uint256 extraTimeForExecution = 10 minutes;
         require(
             startDate + extraTimeForExecution > block.timestamp &&
                 endDate > startDate + EXTENSION_DURATION,
-            "NFTMarketReserveAuction: endDate must be > startDate + auction duration"
+            "NFTMarketReserveAuction:INVALID_ENDDATE"
         );
         uint256 auctionId = _getNextAndIncrementAuctionId();
         nftContractToTokenIdToAuctionId[nftContract][tokenId] = auctionId;
@@ -2262,11 +2267,11 @@ abstract contract NFTMarketReserveAuction is
         ReserveAuction storage auction = auctionIdToAuction[auctionId];
         require(
             auction.seller == msg.sender,
-            "NFTMarketReserveAuction: Not your auction"
+            "NFTMarketReserveAuction:NOT_YOUR_AUCTION"
         );
         require(
             auction.startTime > block.timestamp,
-            "NFTMarketReserveAuction: Auction in progress"
+            "NFTMarketReserveAuction:AUCTION_IN_PROGRESS"
         );
 
         auction.amount = reservePrice;
@@ -2282,11 +2287,11 @@ abstract contract NFTMarketReserveAuction is
         ReserveAuction memory auction = auctionIdToAuction[auctionId];
         require(
             auction.seller == msg.sender,
-            "NFTMarketReserveAuction: Not your auction"
+            "NFTMarketReserveAuction:CANCEL_NOT_ALLOWED_DIFFERENT_OWNER"
         );
         require(
             auction.bidder == address(0),
-            "NFTMarketReserveAuction: Auction in progress"
+            "NFTMarketReserveAuction:AUCTION_IN_PROGRESS"
         );
 
         delete nftContractToTokenIdToAuctionId[auction.nftContract][
@@ -2317,12 +2322,12 @@ abstract contract NFTMarketReserveAuction is
         ReserveAuction storage auction = auctionIdToAuction[auctionId];
         require(
             auction.amount != 0,
-            "NFTMarketReserveAuction: Auction not found"
+            "NFTMarketReserveAuction:AUCTION_NOT_FOUND"
         );
         require(
             auction.startTime <= block.timestamp &&
                 auction.endTime >= block.timestamp,
-            "NFTMarketReserveAuction: Auction not started / ended"
+            "NFTMarketReserveAuction:AUCTION_NOT_LIVE"
         );
 
         uint256 minAmount = _getMinBidAmountForReserveAuction(auction.amount);
@@ -2331,7 +2336,7 @@ abstract contract NFTMarketReserveAuction is
         }
         require(
             amount >= minAmount,
-            "NFTMarketReserveAuction: Bid amount too low"
+            "NFTMarketReserveAuction:BID_AMOUNT_TOO_LOW"
         );
 
         // Cache and update bidder state before a possible reentrancy (via the value transfer)
@@ -2372,11 +2377,11 @@ abstract contract NFTMarketReserveAuction is
         ReserveAuction memory auction = auctionIdToAuction[auctionId];
         require(
             auction.endTime > 0,
-            "NFTMarketReserveAuction: Auction was already settled"
+            "NFTMarketReserveAuction:AUCTION_ALREADY_SETTLED"
         );
         require(
             auction.endTime < block.timestamp,
-            "NFTMarketReserveAuction: Auction still in progress"
+            "NFTMarketReserveAuction:AUCTION_IN_PROGRESS"
         );
 
         delete nftContractToTokenIdToAuctionId[auction.nftContract][
@@ -2470,12 +2475,12 @@ abstract contract NFTMarketReserveAuction is
     {
         require(
             bytes(reason).length > 0,
-            "NFTMarketReserveAuction: Include a reason for this cancellation"
+            "NFTMarketReserveAuction:INCLUDE_A_REASON_FOR_THIS_CANCELLATION"
         );
         ReserveAuction memory auction = auctionIdToAuction[auctionId];
         require(
             auction.amount > 0,
-            "NFTMarketReserveAuction: Auction not found"
+            "NFTMarketReserveAuction:AUCTION_NOT_FOUND"
         );
 
         delete nftContractToTokenIdToAuctionId[auction.nftContract][
@@ -2522,7 +2527,7 @@ abstract contract NFTMarketReserveAuction is
             if (auction.seller != address(0)) {
                 require(
                     auction.seller == originalAddress,
-                    "NFTMarketReserveAuction: Auction not created by that address"
+                    "NFTMarketReserveAuction:AUCTION_NOT_CREATED_BY_THAT_ADDRESS"
                 );
                 auction.seller = newAddress;
                 emit ReserveAuctionSellerMigrated(
