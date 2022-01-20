@@ -1021,6 +1021,11 @@ interface IFNDNFT721 {
         external
         view
         returns (address payable);
+
+    function getTokenRoyalty(uint256 tokenId)
+        external
+        view
+        returns (uint256);
 }
 
 // File contracts/mixins/NFTMarketCreators.sol
@@ -1110,13 +1115,11 @@ abstract contract NFTMarketFees is
 
     event MarketFeesUpdated(
         uint256 primaryFoundationFeeBasisPoints,
-        uint256 secondaryFoundationFeeBasisPoints,
-        uint256 secondaryCreatorFeeBasisPoints
+        uint256 secondaryFoundationFeeBasisPoints
     );
 
     uint256 private _primaryFoundationFeeBasisPoints;
     uint256 private _secondaryFoundationFeeBasisPoints;
-    uint256 private _secondaryCreatorFeeBasisPoints;
 
     mapping(address => mapping(uint256 => bool))
         private nftContractToTokenIdToFirstSaleCompleted;
@@ -1156,7 +1159,7 @@ abstract contract NFTMarketFees is
     /**
      * @notice Returns the current fee configuration in basis points.
      */
-    function getFeeConfig()
+    function getFeeConfig(address nftContract, uint256 tokenId)
         public
         view
         returns (
@@ -1168,7 +1171,7 @@ abstract contract NFTMarketFees is
         return (
             _primaryFoundationFeeBasisPoints,
             _secondaryFoundationFeeBasisPoints,
-            _secondaryCreatorFeeBasisPoints
+            IFNDNFT721(nftContract).getTokenRoyalty(tokenId)
         );
     }
 
@@ -1223,6 +1226,7 @@ abstract contract NFTMarketFees is
             address payable tokenCreatorPaymentAddress
         ) = _getCreatorAndPaymentAddress(nftContract, tokenId);
         uint256 foundationFeeBasisPoints;
+        uint256 secondaryCreatorFeeBasisPoints = IFNDNFT721(nftContract).getTokenRoyalty(tokenId);
         if (_getIsPrimary(nftContract, tokenId, creator, seller)) {
             foundationFeeBasisPoints = _primaryFoundationFeeBasisPoints;
             // On a primary sale, the creator is paid the remainder via `ownerRev`.
@@ -1234,7 +1238,7 @@ abstract contract NFTMarketFees is
             if (tokenCreatorPaymentAddress != address(0)) {
                 // SafeMath is not required when dividing by a constant value > 0.
                 creatorSecondaryFee =
-                    price.mul(_secondaryCreatorFeeBasisPoints) /
+                    price.mul(secondaryCreatorFeeBasisPoints) /
                     BASIS_POINTS;
                 creatorSecondaryFeeTo = tokenCreatorPaymentAddress;
             }
@@ -1299,32 +1303,30 @@ abstract contract NFTMarketFees is
         );
     }
 
+
     /**
      * @notice Allows Foundation to change the market fees.
      */
     function _updateMarketFees(
         uint256 primaryFoundationFeeBasisPoints,
-        uint256 secondaryFoundationFeeBasisPoints,
-        uint256 secondaryCreatorFeeBasisPoints
+        uint256 secondaryFoundationFeeBasisPoints
     ) internal {
         require(
             primaryFoundationFeeBasisPoints < BASIS_POINTS,
             "NFTMarketFees: Fees >= 100%"
         );
-        require(
+        /*require(
             secondaryFoundationFeeBasisPoints.add(
                 secondaryCreatorFeeBasisPoints
             ) < BASIS_POINTS,
             "NFTMarketFees: Fees >= 100%"
-        );
+        );*/
         _primaryFoundationFeeBasisPoints = primaryFoundationFeeBasisPoints;
         _secondaryFoundationFeeBasisPoints = secondaryFoundationFeeBasisPoints;
-        _secondaryCreatorFeeBasisPoints = secondaryCreatorFeeBasisPoints;
 
         emit MarketFeesUpdated(
             primaryFoundationFeeBasisPoints,
-            secondaryFoundationFeeBasisPoints,
-            secondaryCreatorFeeBasisPoints
+            secondaryFoundationFeeBasisPoints
         );
     }
 
@@ -2581,15 +2583,13 @@ contract BlingMarket is
         uint256 minPercentIncrementInBasisPoints,
         uint256 duration,
         uint256 primaryF8nFeeBasisPoints,
-        uint256 secondaryF8nFeeBasisPoints,
-        uint256 secondaryCreatorFeeBasisPoints
+        uint256 secondaryF8nFeeBasisPoints
     ) public onlyFoundationAdmin {
         _reinitialize();
         _updateReserveAuctionConfig(minPercentIncrementInBasisPoints, duration);
         _updateMarketFees(
             primaryF8nFeeBasisPoints,
-            secondaryF8nFeeBasisPoints,
-            secondaryCreatorFeeBasisPoints
+            secondaryF8nFeeBasisPoints
         );
     }
 
