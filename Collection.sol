@@ -1815,7 +1815,6 @@ contract ERC721Upgradeable is
         // _tokenOwners are indexed by tokenIds, so .length() returns the number of tokenIds
         if (_supply == 0) return _tokenOwners.length();
         return _supply;
-        //return _tokenOwners.length();
     }
 
     /**
@@ -2140,10 +2139,6 @@ contract ERC721Upgradeable is
         internal
         virtual
     {
-        require(
-            _exists(tokenId),
-            "ERC721Metadata: URI set of nonexistent token"
-        );
         _tokenURIs[tokenId] = _tokenURI;
     }
 
@@ -2354,7 +2349,13 @@ interface IFNDNFTMarket {
             uint256 secondaryF8nFeeBasisPoints,
             uint256 secondaryCreatorFeeBasisPoints
         );
-
+    function getFoundationFees() 
+        external 
+        view 
+        returns(
+            uint256 primaryF8nFeeBasisPoints,
+            uint256 secondaryF8nFeeBasisPoints
+        );
 }
 
 // File @openzeppelin/contracts/utils/Address.sol@v3.1.0-solc-0.7
@@ -2695,7 +2696,6 @@ abstract contract NFT721Creator is Initializable, ERC721Upgradeable {
 
 // File contracts/mixins/NFT721Market.sol
 
-
 pragma solidity ^0.7.0;
 
 /**
@@ -2707,8 +2707,6 @@ abstract contract NFT721Market is
     NFT721Creator
 {
     using AddressUpgradeable for address;
-
-    event NFTMarketUpdated(address indexed nftMarket);
 
     IFNDNFTMarket private nftMarket;
 
@@ -2725,8 +2723,6 @@ abstract contract NFT721Market is
             "NFT721Market: Market address is not a contract"
         );
         nftMarket = IFNDNFTMarket(_nftMarket);
-
-        emit NFTMarketUpdated(_nftMarket);
     }
 
     /**
@@ -2739,7 +2735,7 @@ abstract contract NFT721Market is
         override
         returns (address payable[] memory)
     {
-        require(_exists(id), "ERC721Metadata: Query for nonexistent token");
+        require(_exists(id), "ERC721Metadata:nonexistent token");
 
         address payable[] memory result = new address payable[](2);
         result[0] = getFoundationTreasury();
@@ -2758,7 +2754,7 @@ abstract contract NFT721Market is
             ,
             uint256 secondaryF8nFeeBasisPoints,
             uint256 secondaryCreatorFeeBasisPoints
-        ) = nftMarket.getFeeConfig(address(this), tokenId );
+        ) = nftMarket.getFeeConfig(address(this), tokenId);
         uint256[] memory result = new uint256[](2);
         result[0] = secondaryF8nFeeBasisPoints;
         result[1] = secondaryCreatorFeeBasisPoints;
@@ -2779,7 +2775,7 @@ abstract contract NFT721Market is
     {
         require(
             _exists(tokenId),
-            "ERC721Metadata: Query for nonexistent token"
+            "ERC721Metadata:nonexistent token"
         );
 
         recipients[0] = getFoundationTreasury();
@@ -2804,15 +2800,13 @@ pragma solidity ^0.7.0;
  * @notice A mixin to extend the OpenZeppelin metadata implementation.
  */
 abstract contract NFT721Metadata is NFT721Creator {
-    // using StringsUpgradeable for uint256;
 
     /**
      * @dev Stores hashes minted by a creator to prevent duplicates.
      */
     mapping(address => mapping(string => bool))
         private creatorToIPFSHashToMinted;
-
-    event BaseURIUpdated(string baseURI);
+        
     event TokenIPFSPathUpdated(
         uint256 indexed tokenId,
         string indexed indexedTokenIPFSPath,
@@ -2832,7 +2826,6 @@ abstract contract NFT721Metadata is NFT721Creator {
         return _tokenURIs[tokenId];
     }
     
-
     /**
      * @notice Checks if the creator has already minted a given NFT.
      */
@@ -2851,15 +2844,13 @@ abstract contract NFT721Metadata is NFT721Creator {
         view
         returns (uint256) 
     {
-        return _tokenRoyaltys[tokenId] ;
+        return _tokenRoyaltys[tokenId];
     }
 
     function _updateBaseURI(string memory _baseURI) internal {
         _setBaseURI(_baseURI);
 
-        emit BaseURIUpdated(_baseURI);
     }
-
 
     /**
      * @dev The IPFS path should be the CID + file.extension, e.g.
@@ -2915,6 +2906,7 @@ abstract contract NFT721Mint is
     // using AddressLibrary for address;
     address private collectionCreator;
     uint256 private nextTokenId;
+    using SafeMathUpgradeable for uint256;
 
     event Minted(
         address indexed creator,
@@ -2970,7 +2962,13 @@ abstract contract NFT721Mint is
         onlyCollectionCreator
         returns (uint256 tokenId)
     {
-        require(royalty <= 2000,"Royalty must be less than or equal to 20%");
+       (
+           ,
+            uint256 secondaryF8nFeeBasisPoints
+       ) = IFNDNFTMarket(getNFTMarket()).getFoundationFees();
+    
+       require(secondaryF8nFeeBasisPoints.add(royalty) < 10000, "Fees >= 100%");     
+        
         tokenId = nextTokenId++;
         if (_supply != 0) {
             require(
@@ -3094,10 +3092,10 @@ contract BlingCollection is
         string memory symbol,
         uint256 supply,
         address collectionCreator
-    ) public initializer {
+     ) public initializer {
         require(msg.sender == blingMaster, "BlingCollection:ADDRESS_NOT_AUTHORIZED");
-        HasSecondarySaleFees._initializeHasSecondarySaleFees(); // Leave
-        NFT721Creator._initializeNFT721Creator(); // leave
+        HasSecondarySaleFees._initializeHasSecondarySaleFees(); 
+        NFT721Creator._initializeNFT721Creator();
         NFT721Mint._initializeNFT721Mint(collectionCreator);
         FoundationTreasuryNode._initializeFoundationTreasuryNode(treasury);
         ERC721Upgradeable.__ERC721_init(name, symbol, supply);

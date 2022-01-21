@@ -37,15 +37,12 @@ contract BlingMaster {
         paymentAddressFactory = _paymentSplit;
     }
 
-    // Share[] public shares;
     // collection info mapping
     mapping(address => mapping(string => collectionInfo)) public collections;
     // get collection
     mapping(address => mapping(string => address)) public getCollection;
     mapping(address => string) public getCode;
     mapping(address => string) public brandName;
-    mapping(address => address) public shares;
-
 
     mapping(address => bool) public whitelisted;
 
@@ -108,7 +105,6 @@ contract BlingMaster {
             brandName[brands[i]] = name[i];
             emit Whitelist(brands[i], name[i], status[i]);
         }
-        // emit Whitelist(brands, name, status);
     }
 
     function createCollection(
@@ -120,11 +116,10 @@ contract BlingMaster {
         address payable _beneficiary,
         bytes memory paymentAddressCallData
     ) external onlyWhitelistedUsers returns (address collection, address payable split) {
-        // Add require condition to check
         require(
             getCollection[msg.sender][_colCode] == address(0),
             "BlingMaster:COLLECTION_EXISTS"
-        ); // single check is sufficient
+        );
 
         bytes memory bytecode = type(BlingCollection).creationCode;
         bytes32 salt = keccak256(abi.encodePacked(msg.sender, _colCode));
@@ -137,8 +132,6 @@ contract BlingMaster {
             split = getPaymentAddress(paymentAddressCallData);
         else
             split = _beneficiary;
-
-        shares[collection] = split;
 
         getCollection[msg.sender][_colCode] = collection;
         getCode[collection] = _colCode;
@@ -161,7 +154,6 @@ contract BlingMaster {
             myContract: collection,
             paymentSplit: split
         });
-        // shares[collection] = _shares;
 
         emit CollectionCreated(
             msg.sender,
@@ -203,8 +195,6 @@ contract BlingMaster {
             _split = getPaymentAddress(paymentAddressCallData);
         else
             _split = _beneficiary;
-
-        shares[_colContract] = _split;
 
         collection.name = _colName;
         collection.description = _colDescription;

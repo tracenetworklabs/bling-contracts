@@ -1176,6 +1176,22 @@ abstract contract NFTMarketFees is
     }
 
     /**
+     * @notice Returns the fees of foundation in basis points
+     */
+
+    function getFoundationFees() public 
+    view 
+    returns(uint256 primaryFoundationFeeBasisPoints, 
+    uint256 secondaryFoundationFeeBasisPoints
+    )
+    {
+        return (
+            _primaryFoundationFeeBasisPoints,
+            _secondaryFoundationFeeBasisPoints
+        );
+    }
+
+    /**
      * @notice Returns how funds will be distributed for a sale at the given price point.
      * @dev This could be used to present exact fee distributing on listing or before a bid is placed.
      */
@@ -1226,12 +1242,12 @@ abstract contract NFTMarketFees is
             address payable tokenCreatorPaymentAddress
         ) = _getCreatorAndPaymentAddress(nftContract, tokenId);
         uint256 foundationFeeBasisPoints;
-        uint256 secondaryCreatorFeeBasisPoints = IFNDNFT721(nftContract).getTokenRoyalty(tokenId);
         if (_getIsPrimary(nftContract, tokenId, creator, seller)) {
             foundationFeeBasisPoints = _primaryFoundationFeeBasisPoints;
             // On a primary sale, the creator is paid the remainder via `ownerRev`.
             ownerRevTo = tokenCreatorPaymentAddress;
         } else {
+            uint256 secondaryCreatorFeeBasisPoints = IFNDNFT721(nftContract).getTokenRoyalty(tokenId);
             foundationFeeBasisPoints = _secondaryFoundationFeeBasisPoints;
 
             // If there is no creator then funds go to the seller instead.
@@ -1315,12 +1331,12 @@ abstract contract NFTMarketFees is
             primaryFoundationFeeBasisPoints < BASIS_POINTS,
             "NFTMarketFees: Fees >= 100%"
         );
-        /*require(
-            secondaryFoundationFeeBasisPoints.add(
-                secondaryCreatorFeeBasisPoints
-            ) < BASIS_POINTS,
+
+        require(
+            secondaryFoundationFeeBasisPoints < BASIS_POINTS,
             "NFTMarketFees: Fees >= 100%"
-        );*/
+        );
+
         _primaryFoundationFeeBasisPoints = primaryFoundationFeeBasisPoints;
         _secondaryFoundationFeeBasisPoints = secondaryFoundationFeeBasisPoints;
 
