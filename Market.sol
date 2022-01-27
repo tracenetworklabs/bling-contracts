@@ -2111,6 +2111,7 @@ abstract contract NFTMarketReserveAuction is
         uint256 reservePrice
     );
     event ReserveAuctionCanceled(uint256 indexed auctionId);
+    
     event ReserveAuctionBidPlaced(
         uint256 indexed auctionId,
         address indexed bidder,

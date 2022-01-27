@@ -2315,7 +2315,7 @@ abstract contract HasSecondarySaleFees is Initializable, ERC165Upgradeable {
         virtual
         returns (address payable[] memory);
 
-    function getFeeBps(uint256 id)
+    function getFeeBps(address nftMarket, uint256 id)
         public
         view
         virtual
@@ -2708,23 +2708,6 @@ abstract contract NFT721Market is
 {
     using AddressUpgradeable for address;
 
-    IFNDNFTMarket private nftMarket;
-
-    /**
-     * @notice Returns the address of the Foundation NFTMarket contract.
-     */
-    function getNFTMarket() public view returns (address) {
-        return address(nftMarket);
-    }
-
-    function _updateNFTMarket(address _nftMarket) internal {
-        require(
-            _nftMarket.isContract(),
-            "NFT721Market: Market address is not a contract"
-        );
-        nftMarket = IFNDNFTMarket(_nftMarket);
-    }
-
     /**
      * @notice Returns an array of recipient addresses to which fees should be sent.
      * The expected fee amount is communicated with `getFeeBps`.
@@ -2747,14 +2730,14 @@ abstract contract NFT721Market is
      * @notice Returns an array of fees in basis points.
      * The expected recipients is communicated with `getFeeRecipients`.
      */
-    function getFeeBps(
+    function getFeeBps(address nftMarket,
         uint256  tokenId
     ) public view override returns (uint256[] memory) {
         (
             ,
             uint256 secondaryF8nFeeBasisPoints,
             uint256 secondaryCreatorFeeBasisPoints
-        ) = nftMarket.getFeeConfig(address(this), tokenId);
+        ) = IFNDNFTMarket(nftMarket).getFeeConfig(address(this), tokenId);
         uint256[] memory result = new uint256[](2);
         result[0] = secondaryF8nFeeBasisPoints;
         result[1] = secondaryCreatorFeeBasisPoints;
@@ -2765,7 +2748,7 @@ abstract contract NFT721Market is
      * @notice Get fee recipients and fees in a single call.
      * The data is the same as when calling getFeeRecipients and getFeeBps separately.
      */
-    function getFees(uint256 tokenId)
+    function getFees(address nftMarket, uint256 tokenId)
         public
         view
         returns (
@@ -2784,7 +2767,7 @@ abstract contract NFT721Market is
             ,
             uint256 secondaryF8nFeeBasisPoints,
             uint256 secondaryCreatorFeeBasisPoints
-        ) = nftMarket.getFeeConfig(address(this), tokenId);
+        ) = IFNDNFTMarket(nftMarket).getFeeConfig(address(this), tokenId);
         feesInBasisPoints[0] = secondaryF8nFeeBasisPoints;
         feesInBasisPoints[1] = secondaryCreatorFeeBasisPoints;
     }
@@ -2913,7 +2896,8 @@ abstract contract NFT721Mint is
         uint256 indexed tokenId,
         string indexed indexedTokenIPFSPath,
         string tokenIPFSPath,
-        uint256 royalty
+        uint256 royalty,
+        address marketContract
     );
 
     event Updated(
@@ -2957,7 +2941,7 @@ abstract contract NFT721Mint is
     /**
      * @notice Allows a creator to mint an NFT.
      */
-    function mint(string memory tokenIPFSPath, uint256 royalty)
+    function mint(string memory tokenIPFSPath, uint256 royalty, address marketContract)
         public
         onlyCollectionCreator
         returns (uint256 tokenId)
@@ -2965,7 +2949,7 @@ abstract contract NFT721Mint is
        (
            ,
             uint256 secondaryF8nFeeBasisPoints
-       ) = IFNDNFTMarket(getNFTMarket()).getFoundationFees();
+       ) = IFNDNFTMarket(marketContract).getFoundationFees();
     
        require(secondaryF8nFeeBasisPoints.add(royalty) < 10000, "Fees >= 100%");     
         
@@ -2981,7 +2965,7 @@ abstract contract NFT721Mint is
         _mint(msg.sender, tokenId);
         _updateTokenCreator(tokenId, msg.sender);
         _setTokenIPFSPath(tokenId, tokenIPFSPath);
-        emit Minted(msg.sender, tokenId, tokenIPFSPath, tokenIPFSPath, royalty);
+        emit Minted(msg.sender, tokenId, tokenIPFSPath, tokenIPFSPath, royalty,marketContract);
     }
 
     /**
@@ -2989,12 +2973,12 @@ abstract contract NFT721Mint is
      * This can be used by creators the first time they mint an NFT to save having to issue a separate
      * approval transaction before starting an auction.
      */
-    function mintAndApproveMarket(string memory tokenIPFSPath, uint256 royalty)
+    function mintAndApproveMarket(string memory tokenIPFSPath, uint256 royalty, address marketContract)
         public
         returns (uint256 tokenId)
     {
-        tokenId = mint(tokenIPFSPath, royalty);
-        setApprovalForAll(getNFTMarket(), true);
+        tokenId = mint(tokenIPFSPath, royalty, marketContract);
+        setApprovalForAll(marketContract, true);
     }
 
     /**
@@ -3003,13 +2987,14 @@ abstract contract NFT721Mint is
     function mintWithCreatorPaymentAddress(
         string memory tokenIPFSPath,
         address payable tokenCreatorPaymentAddress,
-        uint256 royalty
+        uint256 royalty,
+        address marketContract
     ) public onlyCollectionCreator returns (uint256 tokenId) {
         require(
             tokenCreatorPaymentAddress != address(0),
             "NFT721Mint:TOKEN_CREATOR_PAYMENT_ADDRESS_IS_REQUIRED"
         );
-        tokenId = mint(tokenIPFSPath, royalty);
+        tokenId = mint(tokenIPFSPath, royalty, marketContract);
         _setTokenCreatorPaymentAddress(tokenId, tokenCreatorPaymentAddress);
     }
 
@@ -3021,14 +3006,16 @@ abstract contract NFT721Mint is
     function mintWithCreatorPaymentAddressAndApproveMarket(
         string memory tokenIPFSPath,
         address payable tokenCreatorPaymentAddress, 
-        uint256 royalty
+        uint256 royalty,
+        address marketContract
     ) public returns (uint256 tokenId) {
         tokenId = mintWithCreatorPaymentAddress(
             tokenIPFSPath,
             tokenCreatorPaymentAddress,
-            royalty
+            royalty,
+            marketContract
         );
-        setApprovalForAll(getNFTMarket(), true);
+        setApprovalForAll(marketContract, true);
     }
 
     /**
@@ -3110,14 +3097,13 @@ contract BlingCollection is
      * @notice Allows a Foundation admin to update NFT config variables.
      * @dev This must be called right after the initial call to `initialize`.
      */
-    function adminUpdateConfig(address _nftMarket, string memory baseURI)
+    function adminUpdateConfig(string memory baseURI)
         public
     {
         require(
             msg.sender == blingMaster || _isFoundationAdmin(),
             "BlingCollection:ADDRESS_NOT_AUTHORIZED"
         );
-        _updateNFTMarket(_nftMarket);
         _updateBaseURI(baseURI);
     }
 

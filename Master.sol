@@ -143,7 +143,6 @@ contract BlingMaster {
             msg.sender
         );
         BlingCollection(collection).adminUpdateConfig(
-            nftmarket,
             "https://ipfs.io/ipfs/"
         );
         collections[msg.sender][_colCode] = collectionInfo({
@@ -237,14 +236,14 @@ contract BlingMaster {
     function updateAdminConfig(
         address _colContract,
         string memory _colCode,
-        address _nftMarket,
         string memory baseURI
     ) public onlyOwner {
         require(
             getCollection[msg.sender][_colCode] == _colContract,
             "BlingMaster:COLLECTION_NOT_EXISTS"
         );
-        BlingCollection(_colContract).adminUpdateConfig(_nftMarket, baseURI);
+        BlingCollection(_colContract).adminUpdateConfig(
+            baseURI);
     }
 
     function getPaymentAddress(bytes memory paymentAddressCallData) public returns(address payable split) {
