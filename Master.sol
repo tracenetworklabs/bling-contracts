@@ -10,7 +10,6 @@ contract BlingMaster {
     using SafeMathUpgradeable for uint256;
 
     address payable treasury;
-    address payable nftmarket;
     address payable admin;
 
     address payable paymentAddressFactory;
@@ -30,9 +29,8 @@ contract BlingMaster {
         address payable paymentSplit;
     }
  
-    constructor(address payable _treasury, address payable _nftMarket, address payable _paymentSplit) {
+    constructor(address payable _treasury, address payable _paymentSplit) {
         treasury = _treasury;
-        nftmarket = _nftMarket;
         admin = msg.sender;
         paymentAddressFactory = _paymentSplit;
     }

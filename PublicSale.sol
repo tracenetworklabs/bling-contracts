@@ -1468,6 +1468,10 @@ abstract contract NFTPublicSale is
         _;
     }
 
+    /**
+     * @notice Allows Foundation to add token address.
+     */
+
     function adminUpdateToken(address tokenAddress, bool status)
         public
         onlyFoundationAdmin
@@ -1486,6 +1490,7 @@ abstract contract NFTPublicSale is
 
     /**
      * @notice Creates a public sale for the given NFT.
+     * The NFT is held in escrow until the sale is finalized or canceled.
      */
 
     function createPublicSale(
@@ -1494,7 +1499,7 @@ abstract contract NFTPublicSale is
         uint256 amount,
         address paymentMode
     ) public onlyValidSaleConfig(amount) {
-        require(tokens[paymentMode], "NFTPublicSale: Token Not Supported");
+        require(tokens[paymentMode], "NFTPublicSale:TOKEN_NOT_SUPPORTED");
         tokenIdToSale[nftContract][tokenId] = PublicSale(
             nftContract,
             tokenId,
@@ -1518,6 +1523,11 @@ abstract contract NFTPublicSale is
         );
     }
 
+    /**
+     * @notice If a sale has been created, the configuration
+     * such as the amount may be changed by the seller.
+     */
+
     function updatePublicSale(
         address nftContract,
         uint256 tokenId,
@@ -1529,6 +1539,11 @@ abstract contract NFTPublicSale is
 
         emit PublicSaleUpdated(nftContract, tokenId, amount);
     }
+
+    /**
+     * @notice If a sale has been created, it may be canceled by the seller.
+     * The NFT is returned to the seller from escrow.
+     */
 
     function cancelPublicSale(address nftContract, uint256 tokenId) public {
         PublicSale memory sale = tokenIdToSale[nftContract][tokenId];
@@ -1545,6 +1560,10 @@ abstract contract NFTPublicSale is
         emit PublicSaleCanceled(nftContract, tokenId);
     }
 
+    /**
+     * @notice Buyer calls this function and pays the required amount.
+     * This will send the NFT to the buyer and distribute funds.
+     */
     function finalizePublicSale(
         address nftContract,
         uint256 tokenId,

@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.6.12;
+pragma solidity 0.7.6;
 
 /**
  * @dev String operations.
@@ -707,7 +707,7 @@ interface ERCMetadata {
     function symbol() external view returns (string memory _symbol);
 }
 
-contract ERC_721 is ERC721, ERCMetadata {
+contract Buddy is ERC721, ERCMetadata {
     using SafeMath for uint256;
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.UintSet;
     using EnumerableMapUpgradeable for EnumerableMapUpgradeable.UintToAddressMap;
@@ -715,10 +715,6 @@ contract ERC_721 is ERC721, ERCMetadata {
 
     string _name;
     string _symbol;
-    //mapping(uint256 => address) public ownerAddress;      // Mapping from tokenId to ownerAddress
-    //mapping(address => uint256) public balance;          // Mapping from ownerAddress to token count
-    //mapping(uint256 => address) public approvedAddress; // Mapping from tokenId to approved address
-    //mapping(address => mapping(address => bool)) public tokenApprovals; // owner sets or unsets approval for address
     string private _baseURI;
     // Mapping from token ID to approved address
     mapping(uint256 => address) private _tokenApprovals;
@@ -739,14 +735,14 @@ contract ERC_721 is ERC721, ERCMetadata {
     event BaseURIUpdated(string baseURI);
 
     constructor(
-        string memory name,
-        string memory symbol,
-        string memory baseURI
-    ) public {
-        _name = name;
-        _symbol = symbol;
+        string memory NftName,
+        string memory NftSymbol,
+        string memory baseURI_
+    ) {
+        _name = NftName;
+        _symbol = NftSymbol;
         _initializeNFT721Mint();
-        _updateBaseURI(baseURI);
+        _updateBaseURI(baseURI_);
     }
 
     event TokenCreatorUpdated(
@@ -1019,8 +1015,8 @@ contract ERC_721 is ERC721, ERCMetadata {
     }
 
     function _mint(address to, uint256 tokenId) internal virtual {
-        require(to != address(0), "ERC721: mint to the zero address");
-        require(!_exists(tokenId), "ERC721: token already minted");
+        require(to != address(0), "ERC721: Mint to the zero address");
+        require(!_exists(tokenId), "ERC721: Token already minted");
 
         _beforeTokenTransfer(address(0), to, tokenId);
 
