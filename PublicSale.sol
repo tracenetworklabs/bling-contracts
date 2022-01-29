@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.7.0;
+pragma solidity 0.7.6;
 
 /**
  * @dev Interface of the ERC20 standard as defined in the EIP.
@@ -92,7 +92,6 @@ interface IERC20 {
         uint256 value
     );
 }
-
 
 pragma solidity ^0.7.0;
 
@@ -287,10 +286,7 @@ interface IFNDNFT721 {
         view
         returns (address payable);
 
-    function getTokenRoyalty(uint256 tokenId)
-        external
-        view
-        returns (uint256);
+    function getTokenRoyalty(uint256 tokenId) external view returns (uint256);
 }
 
 pragma solidity ^0.7.0;
@@ -420,7 +416,6 @@ abstract contract ReentrancyGuardUpgradeable is Initializable {
     }
     uint256[49] private __gap;
 }
-
 
 pragma solidity ^0.7.0;
 
@@ -735,7 +730,6 @@ abstract contract SendValueWithFallbackWithdraw is ReentrancyGuardUpgradeable {
     uint256[499] private ______gap;
 }
 
-
 pragma solidity ^0.7.0;
 
 /**
@@ -981,7 +975,6 @@ library SafeMathUpgradeable {
     }
 }
 
-
 pragma solidity ^0.7.0;
 
 /**
@@ -1103,7 +1096,6 @@ abstract contract NFTMarketCore {
     uint256[950] private ______gap;
 }
 
-
 pragma solidity ^0.7.0;
 
 /**
@@ -1158,8 +1150,6 @@ abstract contract NFTMarketCreators is
     // 500 slots were added via the new SendValueWithFallbackWithdraw mixin
     uint256[500] private ______gap;
 }
-
-
 
 pragma solidity ^0.7.0;
 
@@ -1242,11 +1232,13 @@ abstract contract NFTMarketFees is
      * @notice Returns the fees of foundation in basis points
      */
 
-    function getFoundationFees() public 
-    view 
-    returns(uint256 primaryFoundationFeeBasisPoints, 
-    uint256 secondaryFoundationFeeBasisPoints
-    )
+    function getFoundationFees()
+        public
+        view
+        returns (
+            uint256 primaryFoundationFeeBasisPoints,
+            uint256 secondaryFoundationFeeBasisPoints
+        )
     {
         return (
             _primaryFoundationFeeBasisPoints,
@@ -1310,7 +1302,8 @@ abstract contract NFTMarketFees is
             // On a primary sale, the creator is paid the remainder via `ownerRev`.
             ownerRevTo = tokenCreatorPaymentAddress;
         } else {
-            uint256 secondaryCreatorFeeBasisPoints = IFNDNFT721(nftContract).getTokenRoyalty(tokenId);
+            uint256 secondaryCreatorFeeBasisPoints = IFNDNFT721(nftContract)
+                .getTokenRoyalty(tokenId);
             foundationFeeBasisPoints = _secondaryFoundationFeeBasisPoints;
 
             // If there is no creator then funds go to the seller instead.
@@ -1380,8 +1373,7 @@ abstract contract NFTMarketFees is
             ownerRevTo,
             ownerRev
         );
-    } 
-
+    }
 
     /**
      * @notice Allows Foundation to change the market fees.
@@ -1412,14 +1404,12 @@ abstract contract NFTMarketFees is
     uint256[1000] private ______gap;
 }
 
-
-
-abstract contract NFTMarket is
+abstract contract NFTPublicSale is
     FoundationTreasuryNode,
     FoundationAdminRole,
     FoundationOperatorRole,
     NFTMarketFees
- {
+{
     struct PublicSale {
         address nftContract;
         uint256 tokenId;
@@ -1468,13 +1458,13 @@ abstract contract NFTMarket is
     );
 
     event TokenUpdated(
-    address indexed tokenAddress,
-    bool indexed status,
-    string name
+        address indexed tokenAddress,
+        bool indexed status,
+        string name
     );
 
     modifier onlyValidSaleConfig(uint256 amount) {
-        require(amount > 0, "Amount must be greater than zero");
+        require(amount > 0, "NFTPublicSale: Amount must be greater than zero");
         _;
     }
 
@@ -1504,7 +1494,7 @@ abstract contract NFTMarket is
         uint256 amount,
         address paymentMode
     ) public onlyValidSaleConfig(amount) {
-        require(tokens[paymentMode],"TOKEN_NOT_SUPPORTED");
+        require(tokens[paymentMode], "NFTPublicSale: Token Not Supported");
         tokenIdToSale[nftContract][tokenId] = PublicSale(
             nftContract,
             tokenId,
@@ -1520,30 +1510,31 @@ abstract contract NFTMarket is
         );
 
         emit PublicSaleCreated(
-                msg.sender,
-                nftContract,
-                tokenId,
-                paymentMode,
-                amount
-          );
+            msg.sender,
+            nftContract,
+            tokenId,
+            paymentMode,
+            amount
+        );
     }
 
-    function updatePublicSale(address nftContract, uint256 tokenId, uint256 amount) public onlyValidSaleConfig(amount) {
+    function updatePublicSale(
+        address nftContract,
+        uint256 tokenId,
+        uint256 amount
+    ) public onlyValidSaleConfig(amount) {
         PublicSale memory sale = tokenIdToSale[nftContract][tokenId];
-        require(msg.sender == sale.seller,"NOT_YOUR_AUCTION");
+        require(msg.sender == sale.seller, "NFTPublicSale: Invalid access");
         sale.amount = amount;
 
         emit PublicSaleUpdated(nftContract, tokenId, amount);
-
     }
 
     function cancelPublicSale(address nftContract, uint256 tokenId) public {
         PublicSale memory sale = tokenIdToSale[nftContract][tokenId];
-        require(msg.sender == sale.seller,"NOT_YOUR_AUCTION");
+        require(msg.sender == sale.seller, "NFTPublicSale: Invalid access");
 
-        delete tokenIdToSale[sale.nftContract][
-            sale.tokenId
-        ];
+        delete tokenIdToSale[sale.nftContract][sale.tokenId];
 
         IERC721Upgradeable(sale.nftContract).transferFrom(
             address(this),
@@ -1552,29 +1543,32 @@ abstract contract NFTMarket is
         );
 
         emit PublicSaleCanceled(nftContract, tokenId);
-
     }
 
-    function finalizePublicSale(address nftContract, uint256 tokenId, uint256 amount) public payable { 
+    function finalizePublicSale(
+        address nftContract,
+        uint256 tokenId,
+        uint256 amount
+    ) public payable {
         PublicSale memory sale = tokenIdToSale[nftContract][tokenId];
-        require(sale.amount != 0, "PUBLIC_SALE_NOT_FOUND");
+        require(sale.amount != 0, "NFTPublicSale: Sale not found");
         uint256 sellAmount = sale.amount;
         if (sale.paymentMode == address(0)) {
             amount = msg.value;
-        }
-        else {
+        } else {
             IERC20(sale.paymentMode).transferFrom(
                 msg.sender,
                 address(this),
                 amount
             );
         }
-        require(amount >= sellAmount, "AMOUNT_TOO_LOW");
+        require(
+            amount >= sellAmount,
+            "NFTPublicSale: Amount lesser than allocated"
+        );
         sale.buyer = msg.sender;
 
-        delete tokenIdToSale[sale.nftContract][
-            sale.tokenId
-        ];
+        delete tokenIdToSale[sale.nftContract][sale.tokenId];
 
         IERC721Upgradeable(sale.nftContract).transferFrom(
             address(this),
@@ -1605,18 +1599,23 @@ abstract contract NFTMarket is
             ownerRev
         );
     }
-
 }
 
-pragma solidity ^0.7.0;
-pragma abicoder v2; 
-contract BlingMarketSale is 
+// File contracts/BlingPublicSale.sol
+
+pragma solidity 0.7.6;
+pragma abicoder v2;
+
+/**
+ * @title A public sale for NFTs on Bling.
+ */
+
+contract BlingPublicSale is
     FoundationTreasuryNode,
     FoundationAdminRole,
     NFTMarketFees,
-    NFTMarket
+    NFTPublicSale
 {
-
     /**
      * @notice Called once to configure the contract after the initial deployment.
      * @dev This farms the initialize call out to inherited contracts as needed.
@@ -1632,10 +1631,6 @@ contract BlingMarketSale is
         uint256 primaryF8nFeeBasisPoints,
         uint256 secondaryF8nFeeBasisPoints
     ) public onlyFoundationAdmin {
-        _updateMarketFees(
-            primaryF8nFeeBasisPoints,
-            secondaryF8nFeeBasisPoints
-        );
+        _updateMarketFees(primaryF8nFeeBasisPoints, secondaryF8nFeeBasisPoints);
     }
-
 }

@@ -2052,14 +2052,11 @@ contract ERC721Upgradeable is
         emit Transfer(address(0), to, tokenId);
     }
 
-    /** 
+    /**
      * @dev sets royalty for tokenId
      */
-    function _setTokenRoyalty(
-        uint256 tokenId, uint256 royalty
-    ) internal {
+    function _setTokenRoyalty(uint256 tokenId, uint256 royalty) internal {
         _tokenRoyaltys[tokenId] = royalty;
-        
     }
 
     /**
@@ -2349,10 +2346,11 @@ interface IFNDNFTMarket {
             uint256 secondaryF8nFeeBasisPoints,
             uint256 secondaryCreatorFeeBasisPoints
         );
-    function getFoundationFees() 
-        external 
-        view 
-        returns(
+
+    function getFoundationFees()
+        external
+        view
+        returns (
             uint256 primaryF8nFeeBasisPoints,
             uint256 secondaryF8nFeeBasisPoints
         );
@@ -2730,9 +2728,12 @@ abstract contract NFT721Market is
      * @notice Returns an array of fees in basis points.
      * The expected recipients is communicated with `getFeeRecipients`.
      */
-    function getFeeBps(address nftMarket,
-        uint256  tokenId
-    ) public view override returns (uint256[] memory) {
+    function getFeeBps(address nftMarket, uint256 tokenId)
+        public
+        view
+        override
+        returns (uint256[] memory)
+    {
         (
             ,
             uint256 secondaryF8nFeeBasisPoints,
@@ -2756,10 +2757,7 @@ abstract contract NFT721Market is
             uint256[2] memory feesInBasisPoints
         )
     {
-        require(
-            _exists(tokenId),
-            "ERC721Metadata:nonexistent token"
-        );
+        require(_exists(tokenId), "ERC721Metadata:nonexistent token");
 
         recipients[0] = getFoundationTreasury();
         recipients[1] = getTokenCreatorPaymentAddress(tokenId);
@@ -2783,13 +2781,12 @@ pragma solidity ^0.7.0;
  * @notice A mixin to extend the OpenZeppelin metadata implementation.
  */
 abstract contract NFT721Metadata is NFT721Creator {
-
     /**
      * @dev Stores hashes minted by a creator to prevent duplicates.
      */
     mapping(address => mapping(string => bool))
         private creatorToIPFSHashToMinted;
-        
+
     event TokenIPFSPathUpdated(
         uint256 indexed tokenId,
         string indexed indexedTokenIPFSPath,
@@ -2808,7 +2805,7 @@ abstract contract NFT721Metadata is NFT721Creator {
     {
         return _tokenURIs[tokenId];
     }
-    
+
     /**
      * @notice Checks if the creator has already minted a given NFT.
      */
@@ -2822,17 +2819,12 @@ abstract contract NFT721Metadata is NFT721Creator {
     /**
      * @notice Returns the royalty for a given tokenId
      */
-    function getTokenRoyalty(uint256 tokenId)
-        public
-        view
-        returns (uint256) 
-    {
+    function getTokenRoyalty(uint256 tokenId) public view returns (uint256) {
         return _tokenRoyaltys[tokenId];
     }
 
     function _updateBaseURI(string memory _baseURI) internal {
         _setBaseURI(_baseURI);
-
     }
 
     /**
@@ -2941,31 +2933,36 @@ abstract contract NFT721Mint is
     /**
      * @notice Allows a creator to mint an NFT.
      */
-    function mint(string memory tokenIPFSPath, uint256 royalty, address marketContract)
-        public
-        onlyCollectionCreator
-        returns (uint256 tokenId)
-    {
-       (
-           ,
-            uint256 secondaryF8nFeeBasisPoints
-       ) = IFNDNFTMarket(marketContract).getFoundationFees();
-    
-       require(secondaryF8nFeeBasisPoints.add(royalty) < 10000, "Fees >= 100%");     
-        
+    function mint(
+        string memory tokenIPFSPath,
+        uint256 royalty,
+        address marketContract
+    ) public onlyCollectionCreator returns (uint256 tokenId) {
+        (, uint256 secondaryF8nFeeBasisPoints) = IFNDNFTMarket(marketContract)
+            .getFoundationFees();
+
+        require(
+            secondaryF8nFeeBasisPoints.add(royalty) < 10000,
+            "NFT721Mint: Fees >= 100%"
+        );
+
         tokenId = nextTokenId++;
         if (_supply != 0) {
-            require(
-                tokenId <= _supply,
-                "NFT721Mint:MINT_LIMIT_TOTALSUPPLY"
-            );
+            require(tokenId <= _supply, "NFT721Mint:MINT_LIMIT_TOTALSUPPLY");
         }
-        
+
         _setTokenRoyalty(tokenId, royalty);
         _mint(msg.sender, tokenId);
         _updateTokenCreator(tokenId, msg.sender);
         _setTokenIPFSPath(tokenId, tokenIPFSPath);
-        emit Minted(msg.sender, tokenId, tokenIPFSPath, tokenIPFSPath, royalty,marketContract);
+        emit Minted(
+            msg.sender,
+            tokenId,
+            tokenIPFSPath,
+            tokenIPFSPath,
+            royalty,
+            marketContract
+        );
     }
 
     /**
@@ -2973,10 +2970,11 @@ abstract contract NFT721Mint is
      * This can be used by creators the first time they mint an NFT to save having to issue a separate
      * approval transaction before starting an auction.
      */
-    function mintAndApproveMarket(string memory tokenIPFSPath, uint256 royalty, address marketContract)
-        public
-        returns (uint256 tokenId)
-    {
+    function mintAndApproveMarket(
+        string memory tokenIPFSPath,
+        uint256 royalty,
+        address marketContract
+    ) public returns (uint256 tokenId) {
         tokenId = mint(tokenIPFSPath, royalty, marketContract);
         setApprovalForAll(marketContract, true);
     }
@@ -3005,7 +3003,7 @@ abstract contract NFT721Mint is
      */
     function mintWithCreatorPaymentAddressAndApproveMarket(
         string memory tokenIPFSPath,
-        address payable tokenCreatorPaymentAddress, 
+        address payable tokenCreatorPaymentAddress,
         uint256 royalty,
         address marketContract
     ) public returns (uint256 tokenId) {
@@ -3079,9 +3077,12 @@ contract BlingCollection is
         string memory symbol,
         uint256 supply,
         address collectionCreator
-     ) public initializer {
-        require(msg.sender == blingMaster, "BlingCollection:ADDRESS_NOT_AUTHORIZED");
-        HasSecondarySaleFees._initializeHasSecondarySaleFees(); 
+    ) public initializer {
+        require(
+            msg.sender == blingMaster,
+            "BlingCollection:ADDRESS_NOT_AUTHORIZED"
+        );
+        HasSecondarySaleFees._initializeHasSecondarySaleFees();
         NFT721Creator._initializeNFT721Creator();
         NFT721Mint._initializeNFT721Mint(collectionCreator);
         FoundationTreasuryNode._initializeFoundationTreasuryNode(treasury);
@@ -3089,7 +3090,10 @@ contract BlingCollection is
     }
 
     function adminUpdateSupply(uint256 _supply) public {
-        require(msg.sender == blingMaster, "BlingCollection:ADDRESS_NOT_AUTHORIZED");
+        require(
+            msg.sender == blingMaster,
+            "BlingCollection:ADDRESS_NOT_AUTHORIZED"
+        );
         ERC721Upgradeable._updateSupply(_supply);
     }
 
@@ -3097,9 +3101,7 @@ contract BlingCollection is
      * @notice Allows a Foundation admin to update NFT config variables.
      * @dev This must be called right after the initial call to `initialize`.
      */
-    function adminUpdateConfig(string memory baseURI)
-        public
-    {
+    function adminUpdateConfig(string memory baseURI) public {
         require(
             msg.sender == blingMaster || _isFoundationAdmin(),
             "BlingCollection:ADDRESS_NOT_AUTHORIZED"
