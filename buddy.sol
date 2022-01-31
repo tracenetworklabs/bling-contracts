@@ -1174,7 +1174,6 @@ contract Buddy is ERC721, ERCMetadata {
          require(msg.value >= feesAmount[tokenAddress],"Fees Amount is low");
         _fees = msg.value;
         }
-        require(_fees>0, "Buddy: Fees must be greater than zero");
         updateFees(_fees);
         tokenId = nextTokenId++;
         _mint(msg.sender, tokenId);
