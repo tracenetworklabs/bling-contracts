@@ -7,6 +7,7 @@ pragma experimental ABIEncoderV2;
 
 contract BlingMaster {
     address payable treasury;
+    // Collection List
     address[] public collectionList;
     address payable paymentAddressFactory;
 
