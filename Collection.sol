@@ -1651,6 +1651,8 @@ contract ERC721Upgradeable is
     // Optional mapping for token URIs
     mapping(uint256 => string) internal _tokenURIs;
 
+    mapping(uint256 => bool) public status;
+
     // Token totalSupply
     uint256 internal _supply;
 
@@ -1901,6 +1903,10 @@ contract ERC721Upgradeable is
             _isApprovedOrOwner(_msgSender(), tokenId),
             "ERC721: transfer caller is not owner nor approved"
         );
+        require(
+            status[tokenId] == false,
+            "ERC721: Token cannot be transferred"
+        );
 
         _transfer(from, to, tokenId);
     }
@@ -1928,6 +1934,10 @@ contract ERC721Upgradeable is
         require(
             _isApprovedOrOwner(_msgSender(), tokenId),
             "ERC721: transfer caller is not owner nor approved"
+        );
+        require(
+            status[tokenId] == false,
+            "ERC721: Token cannot be transferred"
         );
         _safeTransfer(from, to, tokenId, _data);
     }
@@ -1995,6 +2005,14 @@ contract ERC721Upgradeable is
         return (spender == owner ||
             getApproved(tokenId) == spender ||
             isApprovedForAll(owner, spender));
+    }
+
+    function lock(uint256 tokenId) external {
+        require(
+            _exists(tokenId),
+            "ERC721: operator query for nonexistent token"
+        );
+        status[tokenId] = true;
     }
 
     /**
@@ -2966,20 +2984,6 @@ abstract contract NFT721Mint is
     }
 
     /**
-     * @notice Allows a creator to mint an NFT and set approval for the Foundation marketplace.
-     * This can be used by creators the first time they mint an NFT to save having to issue a separate
-     * approval transaction before starting an auction.
-     */
-    function mintAndApproveMarket(
-        string memory tokenIPFSPath,
-        uint256 royalty,
-        address marketContract
-    ) public returns (uint256 tokenId) {
-        tokenId = mint(tokenIPFSPath, royalty, marketContract);
-        setApprovalForAll(marketContract, true);
-    }
-
-    /**
      * @notice Allows a creator to mint an NFT and have creator revenue/royalties sent to an alternate address.
      */
     function mintWithCreatorPaymentAddress(
@@ -3102,10 +3106,7 @@ contract BlingCollection is
      * @dev This must be called right after the initial call to `initialize`.
      */
     function adminUpdateConfig(string memory baseURI) public {
-        require(
-            msg.sender == blingMaster || _isFoundationAdmin(),
-            "BlingCollection:ADDRESS_NOT_AUTHORIZED"
-        );
+        require(_isFoundationAdmin(), "BlingCollection:ADDRESS_NOT_AUTHORIZED");
         _updateBaseURI(baseURI);
     }
 

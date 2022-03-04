@@ -6,12 +6,8 @@ pragma solidity 0.7.6;
 pragma experimental ABIEncoderV2;
 
 contract BlingMaster {
-    // Include safemanth library
-    using SafeMathUpgradeable for uint256;
-
     address payable treasury;
-    address payable admin;
-
+    address[] public collectionList;
     address payable paymentAddressFactory;
 
     struct collectionInfo {
@@ -28,10 +24,9 @@ contract BlingMaster {
         // Payment split
         address payable paymentSplit;
     }
- 
+
     constructor(address payable _treasury, address payable _paymentSplit) {
         treasury = _treasury;
-        admin = msg.sender;
         paymentAddressFactory = _paymentSplit;
     }
 
@@ -72,10 +67,7 @@ contract BlingMaster {
      * @dev Modifier to protect an initializer function from being invoked twice.
      */
     modifier onlyWhitelistedUsers() {
-        require(
-            whitelisted[msg.sender],
-            "BlingMaster:ADDRESS_NOT_WHITELISTED"
-        );
+        require(whitelisted[msg.sender], "BlingMaster:ADDRESS_NOT_WHITELISTED");
         _;
     }
 
@@ -113,7 +105,11 @@ contract BlingMaster {
         string[] memory _colProperties,
         address payable _beneficiary,
         bytes memory paymentAddressCallData
-    ) external onlyWhitelistedUsers returns (address collection, address payable split) {
+    )
+        external
+        onlyWhitelistedUsers
+        returns (address collection, address payable split)
+    {
         require(
             getCollection[msg.sender][_colCode] == address(0),
             "BlingMaster:COLLECTION_EXISTS"
@@ -126,11 +122,10 @@ contract BlingMaster {
             collection := create2(0, add(bytecode, 32), mload(bytecode), salt)
         }
 
-        if(_beneficiary == address(0))
+        if (_beneficiary == address(0))
             split = getPaymentAddress(paymentAddressCallData);
-        else
-            split = _beneficiary;
-
+        else split = _beneficiary;
+        collectionList.push(collection);
         getCollection[msg.sender][_colCode] = collection;
         getCode[collection] = _colCode;
         BlingCollection(collection).initialize(
@@ -140,9 +135,7 @@ contract BlingMaster {
             _colQuantity,
             msg.sender
         );
-        BlingCollection(collection).adminUpdateConfig(
-            "https://ipfs.io/ipfs/"
-        );
+        BlingCollection(collection).adminUpdateConfig("https://ipfs.io/ipfs/");
         collections[msg.sender][_colCode] = collectionInfo({
             name: _colName,
             quantity: _colQuantity,
@@ -188,10 +181,9 @@ contract BlingMaster {
 
         address payable _split;
 
-        if(_beneficiary == address(0))
+        if (_beneficiary == address(0))
             _split = getPaymentAddress(paymentAddressCallData);
-        else
-            _split = _beneficiary;
+        else _split = _beneficiary;
 
         collection.name = _colName;
         collection.description = _colDescription;
@@ -231,23 +223,13 @@ contract BlingMaster {
         );
     }
 
-    function updateAdminConfig(
-        address _colContract,
-        string memory _colCode,
-        string memory baseURI
-    ) public onlyOwner {
-        require(
-            getCollection[msg.sender][_colCode] == _colContract,
-            "BlingMaster:COLLECTION_NOT_EXISTS"
-        );
-        BlingCollection(_colContract).adminUpdateConfig(
-            baseURI);
-    }
-
-    function getPaymentAddress(bytes memory paymentAddressCallData) public returns(address payable split) {
-        (bool success, bytes memory returndata) = paymentAddressFactory.call{value: 0}(
-            paymentAddressCallData
-        );
+    function getPaymentAddress(bytes memory paymentAddressCallData)
+        public
+        returns (address payable split)
+    {
+        (bool success, bytes memory returndata) = paymentAddressFactory.call{
+            value: 0
+        }(paymentAddressCallData);
 
         if (success) {
             assembly {
